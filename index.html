@@ -3,22 +3,59 @@
 <head>
     <title>Platform Adventure</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;  /* Prevent scrolling */
+        }
+
         body {
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #333;
+            background: #0B0B1A;  /* Match game background */
+            overflow: hidden;  /* Prevent scrolling */
         }
+
         canvas {
-            border: 2px solid black;
-            background: white;
+            border: 2px solid #2B2B4E;  /* Match game theme */
+            background: #0B0B1A;
+        }
+
+        /* Prevent space bar scrolling */
+        html {
+            overflow: hidden;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="1200" height="800"></canvas>
+    <script>
+        // Resize function
+        function resizeCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            const padding = 40;
+            const maxWidth = window.innerWidth - padding;
+            const maxHeight = window.innerHeight - padding;
+            const ratio = 1200/800;
+
+            let width = maxWidth;
+            let height = width / ratio;
+
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = height * ratio;
+            }
+
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
     <script src="game.js"></script>
 </body>
 </html> 

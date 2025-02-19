@@ -95,6 +95,7 @@ class Player {
         this.facingRight = true;
         this.animationFrame = 0;
         this.animationTimer = 0;
+        this.phasing = false;  // Add this for phase-through mechanic
     }
 
     reset() {
@@ -106,12 +107,16 @@ class Player {
         this.velocityX = 0;
         this.isJumping = false;
         this.hasDoubleJump = true;
-        this.score = 0;
     }
 
     update() {
         // Apply gravity
         this.velocityY += GRAVITY;
+        
+        // Apply fast fall/phase
+        if (this.phasing) {
+            this.velocityY += GRAVITY * 2;  // Fall faster when holding S/Down
+        }
         
         // Apply air resistance only to vertical movement
         this.velocityY *= AIR_RESISTANCE;
@@ -499,7 +504,7 @@ const levels = [
             { x: 650, y: 400 },
         ],
         challengeTokens: [
-            { x: 400, y: 300 }
+            { x: 400, y: 500 }  // Requires perfect double jump timing
         ],
         goal: { x: 1100, y: 700 }
     },
@@ -510,7 +515,8 @@ const levels = [
             { x: 300, y: 600, width: 200 },
         ],
         movingPlatforms: [
-            { x: 350, y: 600, width: 150, xRange: 300, speed: 2 }
+            { x: 350, y: 600, width: 150, xRange: 300, speed: 2 },
+            { x: 800, y: 350, width: 150, xRange: 300, speed: 2 }
         ],
         verticalPlatforms: [],
         disappearingPlatforms: [
@@ -525,6 +531,9 @@ const levels = [
             { x: 400, y: 550 },
             { x: 850, y: 450 },
         ],
+        challengeTokens: [
+            { x: 800, y: 300 }  // Must time moving platform and disappearing platform perfectly
+        ],
         goal: { x: 1100, y: 700 }
     },
     // Level 3 - Vertical and Moving Platforms
@@ -537,7 +546,8 @@ const levels = [
             { x: 700, y: 500, width: 150, xRange: 200, speed: 3 },
         ],
         verticalPlatforms: [
-            { x: 200, y: 400, width: 150, yRange: 200, speed: 2 }
+            { x: 200, y: 400, width: 150, yRange: 200, speed: 2 },
+            { x: 200, y: 200, width: 150, yRange: 200, speed: 2 }
         ],
         spikes: [
             { x: 300, y: 730 },
@@ -549,6 +559,9 @@ const levels = [
             { x: 450, y: 550 },
             { x: 750, y: 450 },
             { x: 250, y: 350 },
+        ],
+        challengeTokens: [
+            { x: 200, y: 150 }  // Must chain vertical platforms perfectly
         ],
         goal: { x: 1100, y: 700 }
     },
@@ -579,6 +592,9 @@ const levels = [
             { x: 320, y: 550 },
             { x: 620, y: 400 },
             { x: 920, y: 250 },
+        ],
+        challengeTokens: [
+            { x: 900, y: 50 }  // Requires perfect vertical platform timing at max height
         ],
         goal: { x: 1100, y: 700 }
     },
@@ -612,6 +628,9 @@ const levels = [
             { x: 520, y: 350 },
             { x: 820, y: 350 },
         ],
+        challengeTokens: [
+            { x: 650, y: 150 }  // Must chain multiple disappearing platforms quickly
+        ],
         goal: { x: 1100, y: 700 }
     },
     // Level 6 - Vertical Challenge
@@ -638,6 +657,9 @@ const levels = [
             { x: 220, y: 300 },
             { x: 620, y: 200 },
             { x: 1020, y: 150 },
+        ],
+        challengeTokens: [
+            { x: 1000, y: 20 }  // Extreme height requiring perfect vertical timing
         ],
         goal: { x: 1100, y: 100 }
     },
@@ -669,6 +691,9 @@ const levels = [
             { x: 220, y: 550 },
             { x: 520, y: 400 },
             { x: 820, y: 250 },
+        ],
+        challengeTokens: [
+            { x: 950, y: 20 }  // Must sync both platform types at their extremes
         ],
         goal: { x: 1100, y: 150 }
     },
@@ -705,7 +730,146 @@ const levels = [
             { x: 720, y: 250 },
             { x: 920, y: 150 },
         ],
+        challengeTokens: [
+            { x: 920, y: 20 }  // Requires mastery of all mechanics at their hardest
+        ],
         goal: { x: 1100, y: 100 }
+    },
+    // Level 9 - Vertical Maze
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },  // Ground
+            { x: 100, y: 600, width: 200 },
+            { x: 900, y: 600, width: 200 },
+            { x: 300, y: 450, width: 200 },
+            { x: 700, y: 450, width: 200 },
+            { x: 500, y: 300, width: 200 },
+            { x: 300, y: 200, width: 100 },  // Adjusted platform position
+        ],
+        movingPlatforms: [
+            { x: 600, y: 200, width: 100, xRange: 200, speed: 3 }  // Added moving platform
+        ],
+        verticalPlatforms: [
+            { x: 400, y: 300, width: 100, yRange: 300, speed: 2 },  // Adjusted speed and range
+        ],
+        disappearingPlatforms: [
+            { x: 500, y: 150, width: 100 }  // Made platform smaller
+        ],
+        spikes: [
+            { x: 350, y: 730 },
+            { x: 550, y: 730 },
+            { x: 750, y: 730 },
+        ],
+        coins: [
+            { x: 150, y: 550 },
+            { x: 950, y: 550 },
+            { x: 550, y: 250 },
+        ],
+        challengeTokens: [
+            { x: 750, y: 50 }  // Must time moving platform at its furthest point
+        ],
+        goal: { x: 1100, y: 100 }
+    },
+    // Level 10 - Speed Run
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },  // Ground
+        ],
+        movingPlatforms: [
+            { x: 200, y: 600, width: 100, xRange: 200, speed: 6 },
+            { x: 500, y: 450, width: 100, xRange: 200, speed: 6 },
+            { x: 800, y: 300, width: 100, xRange: 200, speed: 6 },
+        ],
+        verticalPlatforms: [],
+        disappearingPlatforms: [
+            { x: 400, y: 600, width: 100 },
+            { x: 700, y: 450, width: 100 },
+            { x: 1000, y: 300, width: 100 },
+        ],
+        spikes: [
+            { x: 300, y: 730 },
+            { x: 600, y: 730 },
+            { x: 900, y: 730 },
+        ],
+        coins: [
+            { x: 250, y: 550 },
+            { x: 550, y: 400 },
+            { x: 850, y: 250 },
+        ],
+        challengeTokens: [
+            { x: 1000, y: 200 }  // Must chain fast-moving platforms perfectly
+        ],
+        goal: { x: 1100, y: 200 }
+    },
+    // Level 11 - Platform Rhythm
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },  // Ground
+            { x: 200, y: 600, width: 100 },  // Added some static platforms
+            { x: 800, y: 600, width: 100 },
+        ],
+        movingPlatforms: [],
+        verticalPlatforms: [
+            { x: 200, y: 300, width: 100, yRange: 200, speed: 3 },  // Adjusted speeds and ranges
+            { x: 400, y: 400, width: 100, yRange: 200, speed: 3 },
+            { x: 600, y: 300, width: 100, yRange: 200, speed: 3 },
+            { x: 800, y: 400, width: 100, yRange: 200, speed: 3 },
+            { x: 1000, y: 300, width: 100, yRange: 200, speed: 3 },
+        ],
+        disappearingPlatforms: [],
+        spikes: [
+            { x: 200, y: 730 },
+            { x: 400, y: 730 },
+            { x: 600, y: 730 },
+            { x: 800, y: 730 },
+            { x: 1000, y: 730 },
+        ],
+        coins: [
+            { x: 220, y: 250 },
+            { x: 420, y: 350 },
+            { x: 620, y: 250 },
+            { x: 820, y: 350 },
+        ],
+        challengeTokens: [
+            { x: 1020, y: 100 }  // Must sync with multiple vertical platforms at peak
+        ],
+        goal: { x: 1100, y: 600 }
+    },
+    // Level 12 - The Final Challenge
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },  // Ground
+        ],
+        movingPlatforms: [
+            { x: 200, y: 600, width: 100, xRange: 150, speed: 6 },  // Increased speed
+        ],
+        verticalPlatforms: [
+            { x: 500, y: 200, width: 100, yRange: 400, speed: 6 },  // Increased speed
+        ],
+        disappearingPlatforms: [
+            { x: 300, y: 450, width: 80 },  // Made platforms smaller
+            { x: 700, y: 450, width: 80 },
+            { x: 400, y: 300, width: 80 },
+            { x: 600, y: 300, width: 80 },
+            { x: 500, y: 150, width: 80 },
+        ],
+        spikes: [
+            { x: 250, y: 730 },
+            { x: 450, y: 730 },
+            { x: 650, y: 730 },
+            { x: 850, y: 730 },
+        ],
+        coins: [
+            { x: 320, y: 400 },
+            { x: 720, y: 400 },
+            { x: 420, y: 250 },
+            { x: 620, y: 250 },
+            { x: 520, y: 100 },
+        ],
+        challengeTokens: [
+            { x: 500, y: 20 }  // Ultimate challenge requiring perfect execution
+        ],
+        goal: { x: 1100, y: 700 }
     }
 ];
 
@@ -723,12 +887,33 @@ const player = new Player();
 // Add level statistics tracking
 const levelStats = {};
 
+function saveGameData() {
+    const gameData = {
+        levelStats: levelStats,
+        bestFullRunTime: bestFullRunTime
+    };
+    localStorage.setItem('platformGameData', JSON.stringify(gameData));
+}
+
+function loadGameData() {
+    const savedData = localStorage.getItem('platformGameData');
+    if (savedData) {
+        const gameData = JSON.parse(savedData);
+        levelStats = gameData.levelStats || {};
+        bestFullRunTime = gameData.bestFullRunTime || null;
+    }
+}
+
 function saveLevelCompletion(levelIndex, time, tokens) {
     if (!levelStats[levelIndex] || time < levelStats[levelIndex].bestTime) {
         levelStats[levelIndex] = {
             bestTime: time,
-            challengeTokens: tokens
+            challengeTokens: Math.max(tokens, (levelStats[levelIndex]?.challengeTokens || 0))
         };
+        saveGameData(); // Save after updating best time
+    } else if (tokens > (levelStats[levelIndex].challengeTokens || 0)) {
+        levelStats[levelIndex].challengeTokens = tokens;
+        saveGameData(); // Save after updating tokens
     }
 }
 
@@ -781,6 +966,9 @@ function loadLevel(levelIndex) {
 function checkPlatformCollisions() {
     const allPlatforms = [...platforms, ...movingPlatforms, ...verticalPlatforms, ...disappearingPlatforms];
     for (const platform of allPlatforms) {
+        // Skip collision check if phasing and not ground platform
+        if (player.phasing && platform.y < canvas.height - 50) continue;
+
         if (player.y + player.height > platform.y &&
             player.y < platform.y + platform.height &&
             player.x + player.width > platform.x &&
@@ -808,7 +996,6 @@ function checkCoinCollisions() {
             player.y < coin.y + coin.height &&
             player.y + player.height > coin.y) {
             coin.collected = true;
-            player.score += 100;
         }
     });
 }
@@ -837,7 +1024,7 @@ function checkGoalCollision() {
         player.x + player.width > goal.x &&
         player.y < goal.y + goal.height &&
         player.y + player.height > goal.y) {
-        if (levelStarted) {  // Only save time if level was started
+        if (levelStarted) {
             const levelTime = Date.now() - currentLevelStartTime;
             saveLevelCompletion(currentLevel, levelTime, challengeTokens.filter(t => t.collected).length);
         }
@@ -850,6 +1037,7 @@ function checkGoalCollision() {
                 const fullRunTime = Date.now() - fullRunStartTime;
                 if (!bestFullRunTime || fullRunTime < bestFullRunTime) {
                     bestFullRunTime = fullRunTime;
+                    saveGameData(); // Save after updating full run time
                 }
             }
             gameState = GAME_STATE.MENU;
@@ -874,27 +1062,31 @@ function drawScore() {
     ctx.font = '20px Arial';
     ctx.textAlign = 'left';
     
-    ctx.fillText('Score: ' + player.score, 20, 30);
-    ctx.fillText('Level: ' + (currentLevel + 1), 20, 60);
-    ctx.fillText('Deaths: ' + deathCount, 20, 90);
+    ctx.fillText('Level: ' + (currentLevel + 1), 20, 30);
+    ctx.fillText('Deaths: ' + deathCount, 20, 60);
     
     const remainingCoins = coins.filter(coin => !coin.collected).length;
-    ctx.fillText('Coins: ' + (coins.length - remainingCoins) + '/' + coins.length, 20, 120);
+    ctx.fillText('Coins: ' + (coins.length - remainingCoins) + '/' + coins.length, 20, 90);
     
-    const challengeCount = challengeTokens.filter(token => token.collected).length;
-    ctx.fillText('Challenge Tokens: ' + challengeCount + '/' + challengeTokens.length, 20, 150);
+    let totalCollected = 0;
+    for (const levelNum in levelStats) {
+        if (levelStats[levelNum].challengeTokens) {
+            totalCollected += levelStats[levelNum].challengeTokens;
+        }
+    }
+    ctx.fillText('Challenge Tokens: ' + totalCollected + '/12', 20, 120);
     
     // Show timer
     if (!levelStarted) {
-        ctx.fillText('Time: 0:00.00', 20, 180);
+        ctx.fillText('Time: 0:00.00', 20, 150);
     } else {
         const currentTime = Date.now() - currentLevelStartTime;
-        ctx.fillText('Time: ' + formatTime(currentTime), 20, 180);
+        ctx.fillText('Time: ' + formatTime(currentTime), 20, 150);
     }
     
     // Show personal best
     if (levelStats[currentLevel] && levelStats[currentLevel].bestTime) {
-        ctx.fillText('PB: ' + formatTime(levelStats[currentLevel].bestTime), 20, 210);
+        ctx.fillText('PB: ' + formatTime(levelStats[currentLevel].bestTime), 20, 180);
     }
 }
 
@@ -991,18 +1183,26 @@ function drawMenu() {
     ctx.fillText('Up Arrow / Space to Jump', canvas.width/2, 470);
     ctx.fillText('R to Restart Level', canvas.width/2, 500);
     ctx.fillText('ESC to Exit to Menu', canvas.width/2, 530);
+
+    // Add challenge token count
+    let totalCollected = 0;
+    for (const levelNum in levelStats) {
+        if (levelStats[levelNum].challengeTokens) {
+            totalCollected += levelStats[levelNum].challengeTokens;
+        }
+    }
+    ctx.fillText(`Challenge Tokens Collected: ${totalCollected}/12`, canvas.width/2, 570);
 }
 
 // Input handling
 document.addEventListener('keydown', (event) => {
-    switch(event.key) {
+    switch(event.key.toLowerCase()) {  // Convert to lowercase to handle both cases
         case 'l':
-        case 'L':
             if (gameState === GAME_STATE.MENU) {
                 gameState = GAME_STATE.LEVEL_SELECT;
             }
             break;
-        case 'Escape':
+        case 'escape':
             if (gameState === GAME_STATE.LEVEL_SELECT) {
                 gameState = GAME_STATE.MENU;
             } else if (gameState === GAME_STATE.PLAYING) {
@@ -1012,11 +1212,9 @@ document.addEventListener('keydown', (event) => {
             }
             break;
         case ' ':
-            if (gameState === GAME_STATE.MENU) {
-                gameState = GAME_STATE.PLAYING;
-                deathCount = 0;
-                loadLevel(currentLevel);
-            } else if (gameState === GAME_STATE.PLAYING) {
+        case 'w':
+        case 'arrowup':
+            if (gameState === GAME_STATE.PLAYING) {
                 if (!levelStarted) {
                     levelStarted = true;
                     currentLevelStartTime = Date.now();
@@ -1025,9 +1223,14 @@ document.addEventListener('keydown', (event) => {
                     }
                 }
                 player.jump();
+            } else if (gameState === GAME_STATE.MENU) {
+                gameState = GAME_STATE.PLAYING;
+                deathCount = 0;
+                loadLevel(currentLevel);
             }
             break;
-        case 'ArrowLeft':
+        case 'a':
+        case 'arrowleft':
             if (gameState === GAME_STATE.PLAYING) {
                 if (!levelStarted) {
                     levelStarted = true;
@@ -1040,7 +1243,8 @@ document.addEventListener('keydown', (event) => {
                 player.movingRight = false;
             }
             break;
-        case 'ArrowRight':
+        case 'd':
+        case 'arrowright':
             if (gameState === GAME_STATE.PLAYING) {
                 if (!levelStarted) {
                     levelStarted = true;
@@ -1053,16 +1257,10 @@ document.addEventListener('keydown', (event) => {
                 player.movingLeft = false;
             }
             break;
-        case 'ArrowUp':
+        case 's':
+        case 'arrowdown':
             if (gameState === GAME_STATE.PLAYING) {
-                if (!levelStarted) {
-                    levelStarted = true;
-                    currentLevelStartTime = Date.now();
-                    if (currentLevel === 0) {
-                        fullRunStartTime = Date.now();
-                    }
-                }
-                player.jump();
+                player.phasing = true;
             }
             break;
         case 'r':
@@ -1077,12 +1275,18 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
-    switch(event.key) {
-        case 'ArrowLeft':
+    switch(event.key.toLowerCase()) {
+        case 'a':
+        case 'arrowleft':
             player.movingLeft = false;
             break;
-        case 'ArrowRight':
+        case 'd':
+        case 'arrowright':
             player.movingRight = false;
+            break;
+        case 's':
+        case 'arrowdown':
+            player.phasing = false;
             break;
     }
 });
@@ -1096,9 +1300,6 @@ function checkChallengeTokenCollisions() {
             player.y < token.y + token.height &&
             player.y + player.height > token.y) {
             token.collected = true;
-            player.score += 500; // More points for challenge tokens
-            
-            // Add collection effect
             createCollectionEffect(token.x, token.y);
         }
     });
@@ -1312,3 +1513,6 @@ function calculateSegmentedBestTime() {
     }
     return total;
 } 
+
+// Load saved data when the game starts
+loadGameData(); 
