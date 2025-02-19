@@ -22,11 +22,56 @@ let deathCount = 0;
 let speedrunTimer = 0;
 let speedrunStartTime = 0;
 
+// Add these sprite definitions at the top after the constants
+const SPRITES = {
+    player: {
+        width: 32,
+        height: 48,
+        frames: 4,
+        currentFrame: 0,
+        animationSpeed: 0.15,
+        frameTime: 0
+    }
+};
+
+// Add a color palette at the top
+const COLORS = {
+    background: '#1a1a1a',     // Dark gray background
+    player: {
+        main: '#ff3e3e',       // Bright red
+        secondary: '#ff6b6b',   // Light red
+        trail: '#ff000033'     // Transparent red
+    },
+    platform: {
+        main: '#4a4a4a',       // Medium gray
+        top: '#5a5a5a',        // Light gray highlight
+        bottom: '#363636'      // Dark gray shadow
+    },
+    coin: {
+        outer: '#ffd700',      // Gold
+        inner: '#ffef00',      // Bright yellow
+        glow: '#ffd70044'      // Transparent gold
+    },
+    goal: {
+        active: '#00ff9d',     // Bright mint
+        inactive: '#4a4a4a',   // Gray
+        glowActive: '#00ff9d33',
+        glowInactive: '#4a4a4a22'
+    },
+    spike: {
+        main: '#ff2d2d',       // Bright red
+        glow: '#ff000033'      // Transparent red
+    }
+};
+
 class Player {
     constructor() {
         this.reset();
         this.movingLeft = false;
         this.movingRight = false;
+        this.facingRight = true;
+        this.animationFrame = 0;
+        this.animationTimer = 0;
     }
 
     reset() {
@@ -78,11 +123,54 @@ class Player {
             this.x = canvas.width - this.width;
             this.velocityX = 0;
         }
+
+        // Update facing direction
+        if (this.movingLeft) {
+            this.facingRight = false;
+        } else if (this.movingRight) {
+            this.facingRight = true;
+        }
     }
 
     draw() {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // Update animation timer
+        if (this.movingLeft || this.movingRight) {
+            this.animationTimer += 0.15;
+            if (this.animationTimer >= 1) {
+                this.animationTimer = 0;
+                this.animationFrame = (this.animationFrame + 1) % 4;
+            }
+        }
+
+        ctx.save();
+        
+        // Jump/movement trail effect
+        if (this.isJumping || Math.abs(this.velocityX) > 0.5) {
+            ctx.fillStyle = COLORS.player.trail;
+            ctx.fillRect(this.x - 2, this.y, this.width + 4, this.height);
+        }
+        
+        // Main body with rounded corners
+        ctx.fillStyle = COLORS.player.main;
+        ctx.beginPath();
+        ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+        ctx.fill();
+        
+        // Top highlight
+        ctx.fillStyle = COLORS.player.secondary;
+        ctx.beginPath();
+        ctx.roundRect(this.x, this.y, this.width, 12, 6);
+        ctx.fill();
+        
+        // Eye
+        ctx.fillStyle = 'white';
+        if (this.facingRight) {
+            ctx.fillRect(this.x + this.width - 10, this.y + 6, 4, 4);
+        } else {
+            ctx.fillRect(this.x + 6, this.y + 6, 4, 4);
+        }
+        
+        ctx.restore();
     }
 
     jump() {
@@ -102,12 +190,25 @@ class Platform {
         this.x = x;
         this.y = y;
         this.width = width;
-        this.height = 20;
+        this.height = 32;  // Increased for better visibility
     }
 
     draw() {
-        ctx.fillStyle = 'brown';
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(this.x + 4, this.y + 4, this.width, this.height);
+        
+        // Main platform
+        ctx.fillStyle = COLORS.platform.main;
         ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Top highlight
+        ctx.fillStyle = COLORS.platform.top;
+        ctx.fillRect(this.x, this.y, this.width, 4);
+        
+        // Bottom shadow
+        ctx.fillStyle = COLORS.platform.bottom;
+        ctx.fillRect(this.x, this.y + this.height - 6, this.width, 6);
     }
 }
 
@@ -122,9 +223,22 @@ class Coin {
 
     draw() {
         if (!this.collected) {
-            ctx.fillStyle = 'gold';
+            // Outer glow
+            ctx.beginPath();
+            ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/1.5, 0, Math.PI * 2);
+            ctx.fillStyle = COLORS.coin.glow;
+            ctx.fill();
+            
+            // Main coin
             ctx.beginPath();
             ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/2, 0, Math.PI * 2);
+            ctx.fillStyle = COLORS.coin.outer;
+            ctx.fill();
+            
+            // Inner detail
+            ctx.beginPath();
+            ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/3, 0, Math.PI * 2);
+            ctx.fillStyle = COLORS.coin.inner;
             ctx.fill();
         }
     }
@@ -139,8 +253,27 @@ class Goal {
     }
 
     draw() {
-        ctx.fillStyle = allCoinsCollected() ? 'green' : 'gray';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        const isActive = allCoinsCollected();
+        const baseColor = isActive ? COLORS.goal.active : COLORS.goal.inactive;
+        const glowColor = isActive ? COLORS.goal.glowActive : COLORS.goal.glowInactive;
+        
+        // Glow effect
+        ctx.fillStyle = glowColor;
+        ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+        
+        // Flag pole with rounded top
+        ctx.fillStyle = baseColor;
+        ctx.beginPath();
+        ctx.roundRect(this.x, this.y, 6, this.height, [3, 3, 0, 0]);
+        ctx.fill();
+        
+        // Flag
+        ctx.beginPath();
+        ctx.moveTo(this.x + 6, this.y + 5);
+        ctx.lineTo(this.x + 26, this.y + 15);
+        ctx.lineTo(this.x + 6, this.y + 25);
+        ctx.closePath();
+        ctx.fill();
     }
 }
 
@@ -153,7 +286,17 @@ class Spike {
     }
 
     draw() {
-        ctx.fillStyle = 'red';
+        // Glow effect
+        ctx.fillStyle = COLORS.spike.glow;
+        ctx.beginPath();
+        ctx.moveTo(this.x - 2, this.y + this.height + 2);
+        ctx.lineTo(this.x + this.width/2, this.y - 2);
+        ctx.lineTo(this.x + this.width + 2, this.y + this.height + 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Main spike
+        ctx.fillStyle = COLORS.spike.main;
         ctx.beginPath();
         ctx.moveTo(this.x, this.y + this.height);
         ctx.lineTo(this.x + this.width/2, this.y);
@@ -650,7 +793,9 @@ document.addEventListener('keyup', (event) => {
 });
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Fill background instead of clear
+    ctx.fillStyle = COLORS.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     switch(gameState) {
         case GAME_STATE.MENU:
