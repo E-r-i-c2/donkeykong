@@ -414,16 +414,18 @@ class VerticalPlatform extends Platform {
 }
 
 class DisappearingPlatform extends Platform {
-    constructor(x, y, width, duration = 1000) {
+    constructor(x, y, width) {
         super(x, y, width);
         this.visible = true;
-        this.duration = duration;
-        this.timer = duration;
+        this.timer = 1000;  // Time before platform disappears
+        this.playerTouched = false;
+        this.alpha = 1;
     }
 
     update() {
         if (this.playerTouched) {
-            this.timer -= 16; // Assuming 60fps
+            this.timer -= 16;
+            this.alpha = this.timer / 1000;
             if (this.timer <= 0) {
                 this.visible = false;
             }
@@ -432,15 +434,25 @@ class DisappearingPlatform extends Platform {
 
     draw() {
         if (this.visible) {
-            ctx.fillStyle = `rgba(139, 69, 19, ${this.timer/this.duration})`;
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = '#FF6B6B';  // Bright color to indicate it's special
             ctx.fillRect(this.x, this.y, this.width, this.height);
+            
+            // Add warning pattern
+            ctx.fillStyle = '#FF4444';
+            const patternSize = 10;
+            for (let x = this.x; x < this.x + this.width; x += patternSize * 2) {
+                ctx.fillRect(x, this.y, patternSize, this.height);
+            }
+            ctx.globalAlpha = 1;
         }
     }
 
     reset() {
         this.visible = true;
-        this.timer = this.duration;
+        this.timer = 1000;
         this.playerTouched = false;
+        this.alpha = 1;
     }
 }
 
@@ -487,7 +499,7 @@ class ChallengeToken extends Coin {
     }
 }
 
-// Update LaserBeam class with better visual indicators
+// Update LaserBeam class to show time until activation
 class LaserBeam {
     constructor(x, y, width, interval = 2000, initialDelay = 0) {
         this.x = x;
@@ -515,20 +527,28 @@ class LaserBeam {
         ctx.fillRect(this.x, this.y - 1, this.width, this.height + 2);
 
         if (this.warning) {
-            // Warning indicator
             const warningIntensity = Math.sin(this.timer * 0.1) * 0.5 + 0.5;
             ctx.fillStyle = this.active ? 
                 '#FF0000' : 
                 `rgba(255, 0, 0, ${warningIntensity})`;
             ctx.fillRect(this.x, this.y, this.width, this.height);
 
-            // Countdown indicator
+            // Show time until activation
             if (!this.active) {
-                const timeLeft = Math.ceil((this.interval - this.timer) / 1000);
+                const timeUntilActive = ((this.interval - 300 - this.timer) / 1000).toFixed(1);
                 ctx.fillStyle = 'white';
                 ctx.font = '20px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(timeLeft, this.x + this.width/2, this.y - 10);
+                ctx.fillText(timeUntilActive + 's', this.x + this.width/2, this.y - 10);
+            }
+        } else {
+            // Show time until warning
+            const timeUntilWarning = ((this.interval - 500 - this.timer) / 1000).toFixed(1);
+            if (timeUntilWarning > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(timeUntilWarning + 's', this.x + this.width/2, this.y - 10);
             }
         }
     }
@@ -572,6 +592,7 @@ class BouncePad {
     }
 }
 
+// Update WindZone class to fix arrow movement
 class WindZone {
     constructor(x, y, width, height, force = 3) {
         this.x = x;
@@ -579,89 +600,98 @@ class WindZone {
         this.width = width;
         this.height = height;
         this.force = force;
-        this.particleTimer = 0;
-        this.particles = [];
+        this.arrowOffset = 0;
+    }
+
+    draw() {
+        // Make wind direction more visible
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Update arrow offset to match wind speed and direction
+        this.arrowOffset = (this.arrowOffset + this.force * 0.3) % 40;
+        if (this.arrowOffset < 0) this.arrowOffset += 40; // Handle negative force
+        
+        // Draw moving wind direction arrows
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 2;
+        const arrowSpacing = 40;
+        const arrowSize = 15;
+        
+        // Offset starting position based on direction
+        const startOffset = this.arrowOffset;
+        
+        for (let y = this.y; y < this.y + this.height; y += arrowSpacing) {
+            for (let x = this.x + startOffset; x < this.x + this.width; x += arrowSpacing) {
+                if (x < this.x || x > this.x + this.width - arrowSize) continue;
+                
+                ctx.beginPath();
+                if (this.force > 0) {
+                    // Right-pointing arrow
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + arrowSize, y);
+                    ctx.lineTo(x + arrowSize - 5, y - 5);
+                    ctx.moveTo(x + arrowSize, y);
+                    ctx.lineTo(x + arrowSize - 5, y + 5);
+                } else {
+                    // Left-pointing arrow
+                    ctx.moveTo(x + arrowSize, y);
+                    ctx.lineTo(x, y);
+                    ctx.lineTo(x + 5, y - 5);
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + 5, y + 5);
+                }
+                ctx.stroke();
+            }
+        }
     }
 
     update(player) {
-        // Add wind particles
-        this.particleTimer += 16;
-        if (this.particleTimer >= 100) {
-            this.particleTimer = 0;
-            this.particles.push({
-                x: this.force > 0 ? this.x : this.x + this.width,
-                y: this.y + Math.random() * this.height,
-                life: 1
-            });
-        }
-
-        // Update particles
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const particle = this.particles[i];
-            particle.x += this.force * 2;
-            particle.life -= 0.02;
-            if (particle.life <= 0) {
-                this.particles.splice(i, 1);
-            }
-        }
-
-        // Apply force to player if in zone
+        // Increase wind force
         if (player.x < this.x + this.width &&
             player.x + player.width > this.x &&
             player.y < this.y + this.height &&
             player.y + player.height > this.y) {
-            player.velocityX += this.force;
+            player.velocityX += this.force * 0.3; // Increased from 0.15
         }
-    }
-
-    draw() {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        
-        // Draw particles
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        this.particles.forEach(particle => {
-            ctx.globalAlpha = particle.life;
-            ctx.fillRect(particle.x, particle.y, 2, 2);
-        });
-        ctx.globalAlpha = 1;
     }
 }
 
 const levels = [
-    // Level 1 - Basic Tutorial (Much simpler)
+    // Level 1 - Basic Movement Tutorial
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },  // Ground
-            { x: 300, y: 600, width: 300 },  // Wider platform
-            { x: 600, y: 450, width: 300 },  // Wider platform
+            { x: 300, y: 600, width: 300 },  // Basic jump platform
+            { x: 600, y: 450, width: 300 },  // Double jump platform
         ],
         movingPlatforms: [],
         verticalPlatforms: [],
         disappearingPlatforms: [],
         spikes: [
-            { x: 400, y: 730 }  // Just one spike to teach hazards
+            { x: 400, y: 730 }  // Single spike to teach hazards
         ],
         coins: [
-            { x: 350, y: 550 },  // Easy to reach coins
+            { x: 350, y: 550 },  // Easy coins
             { x: 650, y: 400 },
         ],
         lasers: [],
         windZones: [],
+        bouncePads: [],
         challengeTokens: [
-            { x: 400, y: 500 }  // More accessible token
+            { x: 400, y: 500 }  // Simple challenge token
         ],
         goal: { x: 1100, y: 700 }
     },
 
-    // Level 2 - Introduce Moving Platforms (Slower)
+    // Level 2 - Moving Platforms
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },
-            { x: 300, y: 600, width: 300 },
+            { x: 300, y: 600, width: 200 },
         ],
         movingPlatforms: [
-            { x: 350, y: 600, width: 200, xRange: 200, speed: 1 }  // Slower speed
+            { x: 350, y: 500, width: 200, xRange: 200, speed: 2 }  // Introduce moving platforms
         ],
         verticalPlatforms: [],
         disappearingPlatforms: [],
@@ -670,30 +700,34 @@ const levels = [
             { x: 600, y: 730 }
         ],
         coins: [
-            { x: 400, y: 550 },
+            { x: 400, y: 450 },
             { x: 850, y: 450 },
         ],
-        windZones: [
-            { x: 700, y: 300, width: 200, height: 300, force: 1 }  // Very gentle wind
+        lasers: [],
+        windZones: [],
+        bouncePads: [
+            { x: 750, y: 600, strength: -20 }  // Introduce bounce pads gently
         ],
         challengeTokens: [
-            { x: 800, y: 400 }  // Lower height
+            { x: 800, y: 400 }
         ],
         goal: { x: 1100, y: 700 }
     },
 
-    // Level 3 - Introduce Lasers (Much slower timing)
+    // Level 3 - Vertical Movement
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },
-            { x: 400, y: 600, width: 300 },
-            { x: 200, y: 450, width: 200 },  // Extra platform for safety
+            { x: 400, y: 600, width: 200 },
         ],
         movingPlatforms: [
-            { x: 700, y: 500, width: 150, xRange: 200, speed: 2 },
+            { x: 700, y: 500, width: 150, xRange: 200, speed: 2 }
         ],
         verticalPlatforms: [
-            { x: 200, y: 400, width: 150, yRange: 100, speed: 1 }  // Slower vertical movement
+            { x: 200, y: 400, width: 150, yRange: 200, speed: 2 }  // Introduce vertical platforms
+        ],
+        disappearingPlatforms: [
+            { x: 500, y: 400, width: 150 }  // Introduce disappearing platforms
         ],
         spikes: [
             { x: 300, y: 730 },
@@ -704,23 +738,25 @@ const levels = [
             { x: 750, y: 450 },
             { x: 250, y: 350 },
         ],
-        lasers: [
-            { x: 100, y: 300, width: 200, interval: 4000 }  // Much slower laser timing
+        lasers: [],
+        windZones: [
+            { x: 600, y: 200, width: 200, height: 400, force: 1 }  // Gentle wind introduction
         ],
-        windZones: [],
-        bouncePads: [],
+        bouncePads: [
+            { x: 200, y: 600, strength: -20 }
+        ],
         challengeTokens: [
-            { x: 200, y: 250 }  // More accessible with the extra platform
+            { x: 200, y: 250 }
         ],
         goal: { x: 1100, y: 700 }
     },
 
-    // Level 4 - Gentle Introduction to Combined Mechanics
+    // Level 4 - Laser Introduction
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },
             { x: 300, y: 600, width: 200 },
-            { x: 700, y: 600, width: 200 },  // Extra platform for safety
+            { x: 700, y: 600, width: 200 },
         ],
         movingPlatforms: [
             { x: 300, y: 500, width: 150, xRange: 150, speed: 2 }
@@ -729,7 +765,7 @@ const levels = [
             { x: 900, y: 400, width: 100, yRange: 200, speed: 2 }
         ],
         disappearingPlatforms: [
-            { x: 500, y: 500, width: 150 }  // Wider platform
+            { x: 500, y: 500, width: 150 }
         ],
         spikes: [
             { x: 300, y: 730 },
@@ -741,101 +777,107 @@ const levels = [
             { x: 920, y: 250 },
         ],
         lasers: [
-            { x: 800, y: 200, width: 200, interval: 3000 }  // Slower timing
+            { x: 800, y: 300, width: 200, interval: 3000 }  // Introduce lasers with slow timing
         ],
         windZones: [
-            { x: 850, y: 200, width: 150, height: 200, force: 2 }  // Gentle wind
+            { x: 850, y: 200, width: 150, height: 200, force: 2 }
         ],
         bouncePads: [
-            { x: 850, y: 300, strength: -20 }  // Gentler bounce
+            { x: 850, y: 400, strength: -20 }
         ],
         challengeTokens: [
-            { x: 900, y: 150 }  // More achievable height
+            { x: 900, y: 200 }
         ],
         goal: { x: 1100, y: 700 }
     },
 
-    // Level 5 - Disappearing Path
+    // Level 5 - Disappearing Platform Challenge (New design)
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },  // Ground
-            { x: 200, y: 600, width: 100 },
-            { x: 350, y: 500, width: 100 },
-            { x: 500, y: 400, width: 100 },
-            { x: 650, y: 300, width: 100 },
-            { x: 800, y: 400, width: 100 },
-        ],
-        movingPlatforms: [],
-        verticalPlatforms: [],
-        disappearingPlatforms: [
-            { x: 200, y: 600, width: 100 },
-            { x: 350, y: 500, width: 100 },
-            { x: 500, y: 400, width: 100 },
-            { x: 650, y: 300, width: 100 },
-            { x: 800, y: 400, width: 100 },
-            { x: 600, y: 150, width: 50 },  // Smaller platform
-            { x: 700, y: 100, width: 50 }   // Smaller platform
-        ],
-        spikes: [
-            { x: 250, y: 730 },
-            { x: 450, y: 730 },
-            { x: 650, y: 730 },
-            { x: 850, y: 730 },
-            { x: 600, y: 200 },
-            { x: 700, y: 150 }
-        ],
-        coins: [
-            { x: 220, y: 550 },
-            { x: 520, y: 350 },
-            { x: 820, y: 350 },
-        ],
-        challengeTokens: [
-            { x: 650, y: 50 }
-        ],
-        goal: { x: 1100, y: 700 }
-    },
-
-    // Level 6 - Combining mechanics
-    {
-        platforms: [
-            { x: 0, y: 750, width: 1200 },  // Ground
-            { x: 200, y: 600, width: 100 },
+            { x: 200, y: 600, width: 200 },  // Starting platform
         ],
         movingPlatforms: [
-            { x: 400, y: 650, width: 150, xRange: 200, speed: 3 },
-            { x: 900, y: 100, width: 50, xRange: 100, speed: 6 }  // Fast moving platform near token
+            { x: 700, y: 500, width: 150, xRange: 200, speed: 3 }  // Moving platform for timing
         ],
+        verticalPlatforms: [],
+        disappearingPlatforms: [
+            { x: 400, y: 600, width: 150 },  // First disappearing platform
+            { x: 600, y: 500, width: 150 },  // Second platform
+            { x: 800, y: 400, width: 150 },  // Third platform
+            { x: 600, y: 300, width: 150 },  // Fourth platform
+            { x: 400, y: 200, width: 150 },  // Final platform to token
+        ],
+        spikes: [
+            { x: 300, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
+            { x: 900, y: 730 }
+        ],
+        coins: [
+            { x: 420, y: 550 },
+            { x: 620, y: 450 },
+            { x: 820, y: 350 }
+        ],
+        lasers: [
+            { x: 300, y: 400, width: 200, interval: 2000 }  // Laser to make timing harder
+        ],
+        windZones: [
+            { x: 500, y: 100, width: 300, height: 400, force: 2 }  // Gentle wind to affect jumps
+        ],
+        bouncePads: [
+            { x: 300, y: 500, strength: -20 }  // Optional bounce pad for alternate route
+        ],
+        challengeTokens: [
+            { x: 400, y: 150 }  // Requires mastering disappearing platforms
+        ],
+        goal: { x: 1100, y: 700 }
+    },
+
+    // Level 6 - Advanced Challenge
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },  // Ground
+            { x: 200, y: 600, width: 100 },  // Added some static platforms
+            { x: 800, y: 600, width: 100 },
+        ],
+        movingPlatforms: [],
         verticalPlatforms: [
-            { x: 200, y: 400, width: 100, yRange: 250, speed: 4 },
-            { x: 600, y: 300, width: 100, yRange: 300, speed: 4 },
-            { x: 1000, y: 200, width: 100, yRange: 400, speed: 4 },
+            { x: 200, y: 300, width: 100, yRange: 200, speed: 3 },  // Adjusted speeds and ranges
+            { x: 400, y: 400, width: 100, yRange: 200, speed: 3 },
+            { x: 600, y: 300, width: 100, yRange: 200, speed: 3 },
+            { x: 800, y: 400, width: 100, yRange: 200, speed: 3 },
+            { x: 1000, y: 300, width: 100, yRange: 200, speed: 3 },
         ],
         disappearingPlatforms: [],
         spikes: [
-            { x: 350, y: 730 },
-            { x: 550, y: 730 },
-            { x: 750, y: 730 },
-            { x: 950, y: 50 },
-            { x: 1050, y: 50 }
+            { x: 200, y: 730 },
+            { x: 400, y: 730 },
+            { x: 600, y: 730 },
+            { x: 800, y: 730 },
+            { x: 1000, y: 730 },
         ],
         coins: [
-            { x: 220, y: 300 },
-            { x: 620, y: 200 },
-            { x: 1020, y: 150 },
+            { x: 220, y: 250 },
+            { x: 420, y: 350 },
+            { x: 620, y: 250 },
+            { x: 820, y: 350 },
         ],
         lasers: [
-            { x: 400, y: 200, width: 200, interval: 1500 }  // Faster timing
+            { x: 200, y: 150, width: 300, interval: 800 },
+            { x: 500, y: 100, width: 300, interval: 800, initialDelay: 400 }
         ],
         windZones: [
-            { x: 350, y: 100, width: 300, height: 400, force: 3 }
+            { x: 300, y: 0, width: 400, height: 300, force: 5 },
+            { x: 700, y: 0, width: 400, height: 300, force: -5 }  // Opposing winds
         ],
         bouncePads: [
-            { x: 850, y: 150, strength: -30 }  // Extra high bounce needed
+            { x: 500, y: 300, strength: -35 }  // Strong bounce needed
         ],
         challengeTokens: [
-            { x: 1000, y: 100 }  // Requires mastering both mechanics
+            { x: 1020, y: 30 }  // Requires perfect execution
         ],
-        goal: { x: 1100, y: 100 }
+        goal: { x: 1100, y: 600 }
     },
 
     // Level 7 - Synchronized Platforms
@@ -948,52 +990,69 @@ const levels = [
         goal: { x: 1100, y: 100 }
     },
 
-    // Level 10 - Speed Run
+    // Level 10 - Speed and Precision (More intense version)
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },  // Ground
         ],
         movingPlatforms: [
-            { x: 200, y: 600, width: 100, xRange: 200, speed: 6 },
-            { x: 500, y: 450, width: 100, xRange: 200, speed: 6 },
-            { x: 800, y: 300, width: 100, xRange: 200, speed: 6 },
+            { x: 200, y: 600, width: 100, xRange: 300, speed: 8 },   // Faster speed
+            { x: 500, y: 450, width: 100, xRange: 300, speed: 8 },
+            { x: 800, y: 300, width: 100, xRange: 300, speed: 8 }
         ],
-        verticalPlatforms: [],
+        verticalPlatforms: [
+            { x: 400, y: 400, width: 100, yRange: 200, speed: 5 },   // Added vertical movement
+            { x: 700, y: 300, width: 100, yRange: 200, speed: 5 }
+        ],
         disappearingPlatforms: [
-            { x: 400, y: 600, width: 100 },
-            { x: 700, y: 450, width: 100 },
-            { x: 1000, y: 300, width: 100 },
+            { x: 300, y: 500, width: 80 },   // Smaller platforms
+            { x: 600, y: 350, width: 80 },
+            { x: 900, y: 200, width: 80 }
         ],
         spikes: [
             { x: 300, y: 730 },
-            { x: 600, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
             { x: 900, y: 730 },
+            { x: 400, y: 300 },  // Mid-air spikes
+            { x: 800, y: 150 }
         ],
         coins: [
             { x: 250, y: 550 },
             { x: 550, y: 400 },
-            { x: 850, y: 250 },
+            { x: 850, y: 250 }
+        ],
+        lasers: [
+            { x: 200, y: 400, width: 300, interval: 1000 },
+            { x: 700, y: 250, width: 300, interval: 1000, initialDelay: 500 }
+        ],
+        windZones: [
+            { x: 0, y: 0, width: 1200, height: 400, force: 4 }
+        ],
+        bouncePads: [
+            { x: 400, y: 600, strength: -25 },
+            { x: 800, y: 400, strength: -25 }
         ],
         challengeTokens: [
-            { x: 1000, y: 100 }
+            { x: 1000, y: 50 }  // Much higher and harder to reach
         ],
         goal: { x: 1100, y: 200 }
     },
 
-    // Level 11 - Advanced Challenge
+    // Level 11 - Extreme Challenge
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },  // Ground
             { x: 200, y: 600, width: 100 },  // Added some static platforms
             { x: 800, y: 600, width: 100 },
         ],
-        movingPlatforms: [],
+        movingPlatforms: [
+            { x: 200, y: 500, width: 80, xRange: 400, speed: 10 }  // Extremely fast
+        ],
         verticalPlatforms: [
-            { x: 200, y: 300, width: 100, yRange: 200, speed: 3 },  // Adjusted speeds and ranges
-            { x: 400, y: 400, width: 100, yRange: 200, speed: 3 },
-            { x: 600, y: 300, width: 100, yRange: 200, speed: 3 },
-            { x: 800, y: 400, width: 100, yRange: 200, speed: 3 },
-            { x: 1000, y: 300, width: 100, yRange: 200, speed: 3 },
+            { x: 200, y: 300, width: 80, yRange: 300, speed: 6 },
+            { x: 400, y: 400, width: 80, yRange: 300, speed: 6 },
+            { x: 600, y: 300, width: 80, yRange: 300, speed: 6 }
         ],
         disappearingPlatforms: [],
         spikes: [
@@ -1001,27 +1060,25 @@ const levels = [
             { x: 400, y: 730 },
             { x: 600, y: 730 },
             { x: 800, y: 730 },
-            { x: 1000, y: 730 },
+            { x: 400, y: 300 },  // Mid-air spikes
+            { x: 800, y: 150 }
         ],
         coins: [
-            { x: 220, y: 250 },
-            { x: 420, y: 350 },
-            { x: 620, y: 250 },
-            { x: 820, y: 350 },
+            { x: 220, y: 550 },
+            { x: 520, y: 400 },
+            { x: 820, y: 250 }
         ],
         lasers: [
-            { x: 200, y: 150, width: 300, interval: 800 },
-            { x: 500, y: 100, width: 300, interval: 800, initialDelay: 400 }
+            { x: 200, y: 150, width: 400, interval: 800 },
+            { x: 600, y: 100, width: 400, interval: 800, initialDelay: 400 }
         ],
         windZones: [
-            { x: 300, y: 0, width: 400, height: 300, force: 5 },
-            { x: 700, y: 0, width: 400, height: 300, force: -5 }  // Opposing winds
+            { x: 300, y: 0, width: 400, height: 400, force: 8 },
+            { x: 700, y: 0, width: 400, height: 400, force: -8 }
         ],
-        bouncePads: [
-            { x: 500, y: 300, strength: -35 }  // Strong bounce needed
-        ],
+        bouncePads: [],
         challengeTokens: [
-            { x: 1020, y: 30 }  // Requires perfect execution
+            { x: 1020, y: 30 }  // Requires mastering disappearing platforms
         ],
         goal: { x: 1100, y: 600 }
     },
@@ -1030,51 +1087,49 @@ const levels = [
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },  // Ground
-            { x: 200, y: 600, width: 100 },
+            { x: 200, y: 600, width: 200 },  // Wider platforms for more control
+            { x: 600, y: 600, width: 200 },
+            { x: 400, y: 450, width: 200 },  // Middle platform for safety
         ],
         movingPlatforms: [
-            { x: 200, y: 600, width: 100, xRange: 150, speed: 6 },  // Increased speed
+            { x: 200, y: 300, width: 80, xRange: 400, speed: 12 },
+            { x: 800, y: 300, width: 80, xRange: 400, speed: 12 }
         ],
         verticalPlatforms: [
-            { x: 500, y: 200, width: 100, yRange: 400, speed: 6 },  // Increased speed
+            { x: 500, y: 200, width: 150, yRange: 300, speed: 3 }  // Wider and slower
         ],
         disappearingPlatforms: [
-            { x: 300, y: 450, width: 80 },  // Made platforms smaller
-            { x: 700, y: 450, width: 80 },
-            { x: 400, y: 300, width: 80 },
-            { x: 600, y: 300, width: 80 },
-            { x: 500, y: 150, width: 80 },
+            { x: 300, y: 150, width: 100 },
+            { x: 700, y: 150, width: 100 }
         ],
         spikes: [
             { x: 250, y: 730 },
             { x: 450, y: 730 },
             { x: 650, y: 730 },
-            { x: 850, y: 730 },
-            { x: 450, y: 100 },
-            { x: 550, y: 100 },  // Spikes near token
+            { x: 850, y: 730 }
         ],
         coins: [
             { x: 320, y: 400 },
             { x: 720, y: 400 },
             { x: 420, y: 250 },
             { x: 620, y: 250 },
-            { x: 520, y: 100 },
+            { x: 520, y: 100 }
         ],
         lasers: [
-            { x: 200, y: 100, width: 400, interval: 600 },  // Very fast lasers
+            { x: 200, y: 100, width: 400, interval: 600 },
             { x: 600, y: 150, width: 400, interval: 600, initialDelay: 300 },
             { x: 400, y: 200, width: 400, interval: 600, initialDelay: 150 }
         ],
         windZones: [
-            { x: 0, y: 0, width: 1200, height: 300, force: 6 },  // Strong wind
-            { x: 0, y: 300, width: 1200, height: 300, force: -6 }  // Opposing wind below
+            { x: 0, y: 0, width: 1200, height: 300, force: 10 },
+            { x: 0, y: 300, width: 1200, height: 300, force: -10 }
         ],
         bouncePads: [
-            { x: 300, y: 400, strength: -40 },
-            { x: 700, y: 400, strength: -40 }
+            { x: 300, y: 500, strength: -25 },
+            { x: 700, y: 500, strength: -25 }
         ],
         challengeTokens: [
-            { x: 500, y: 5 }  // The ultimate challenge
+            { x: 500, y: 50 }  // Slightly more accessible but still very challenging
         ],
         goal: { x: 1100, y: 700 }
     }
@@ -1176,9 +1231,8 @@ function loadLevel(levelIndex) {
 }
 
 function checkPlatformCollisions() {
-    const allPlatforms = [...platforms, ...movingPlatforms, ...verticalPlatforms, ...disappearingPlatforms];
+    const allPlatforms = [...platforms, ...movingPlatforms, ...verticalPlatforms, ...disappearingPlatforms.filter(p => p.visible)];
     for (const platform of allPlatforms) {
-        // Skip collision check if phasing and not ground platform
         if (player.phasing && platform.y < canvas.height - 50) continue;
 
         if (player.y + player.height > platform.y &&
@@ -1190,6 +1244,11 @@ function checkPlatformCollisions() {
                 player.y = platform.y - player.height;
                 player.velocityY = 0;
                 player.isJumping = false;
+                
+                // Handle disappearing platform
+                if (platform instanceof DisappearingPlatform) {
+                    platform.playerTouched = true;
+                }
                 
                 // Move player with moving platform
                 if (platform instanceof MovingPlatform) {
@@ -1227,6 +1286,32 @@ function checkSpikeCollisions() {
             return;
         }
     }
+}
+
+function checkObstacleCollisions() {
+    // Check laser collisions
+    lasers.forEach(laser => {
+        if (laser.active &&
+            player.x < laser.x + laser.width &&
+            player.x + player.width > laser.x &&
+            player.y < laser.y + laser.height &&
+            player.y + player.height > laser.y) {
+            deathCount++;
+            loadLevel(currentLevel);
+            return;
+        }
+    });
+
+    // Check bounce pad collisions with improved detection
+    bouncePads.forEach(pad => {
+        if (player.x < pad.x + pad.width &&
+            player.x + player.width > pad.x &&
+            player.y + player.height >= pad.y &&
+            player.y + player.height <= pad.y + pad.height + 5 &&
+            player.velocityY > 0) {
+            pad.bounce(player);
+        }
+    });
 }
 
 function checkGoalCollision() {
@@ -1611,6 +1696,7 @@ function gameLoop() {
             checkPlatformCollisions();
             checkCoinCollisions();
             checkSpikeCollisions();
+            checkObstacleCollisions();
             checkGoalCollision();
             checkChallengeTokenCollisions();
 
