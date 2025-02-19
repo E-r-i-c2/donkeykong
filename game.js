@@ -34,33 +34,38 @@ const SPRITES = {
     }
 };
 
-// Add a color palette at the top
+// Update the color palette for alien theme
 const COLORS = {
-    background: '#1a1a1a',     // Dark gray background
+    background: '#0B0B1A',     // Deep space blue
     player: {
-        main: '#ff3e3e',       // Bright red
-        secondary: '#ff6b6b',   // Light red
-        trail: '#ff000033'     // Transparent red
+        main: '#00FF9D',       // Alien green
+        secondary: '#7AFFCD',   // Light alien green
+        trail: '#00FF9D33'     // Glowing trail
     },
     platform: {
-        main: '#4a4a4a',       // Medium gray
-        top: '#5a5a5a',        // Light gray highlight
-        bottom: '#363636'      // Dark gray shadow
+        main: '#2B2B4E',       // Alien metal
+        top: '#3D3D69',        // Light metal highlight
+        bottom: '#1A1A33'      // Dark metal shadow
     },
     coin: {
-        outer: '#ffd700',      // Gold
-        inner: '#ffef00',      // Bright yellow
-        glow: '#ffd70044'      // Transparent gold
+        outer: '#7B52FF',      // Energy crystal purple
+        inner: '#B599FF',      // Light energy purple
+        glow: '#7B52FF44'      // Energy glow
+    },
+    challengeToken: {
+        outer: '#FF1F1F',      // Rare crystal red
+        inner: '#FF7070',      // Light crystal red
+        glow: '#FF1F1F66'      // Strong energy glow
     },
     goal: {
-        active: '#00ff9d',     // Bright mint
-        inactive: '#4a4a4a',   // Gray
-        glowActive: '#00ff9d33',
-        glowInactive: '#4a4a4a22'
+        active: '#00FFFF',     // Portal cyan
+        inactive: '#2B2B4E',   // Inactive portal
+        glowActive: '#00FFFF55',
+        glowInactive: '#2B2B4E22'
     },
     spike: {
-        main: '#ff2d2d',       // Bright red
-        glow: '#ff000033'      // Transparent red
+        main: '#FF3D3D',       // Danger red
+        glow: '#FF3D3D44'      // Danger glow
     }
 };
 
@@ -144,30 +149,34 @@ class Player {
 
         ctx.save();
         
-        // Jump/movement trail effect
+        // Alien trail effect
         if (this.isJumping || Math.abs(this.velocityX) > 0.5) {
             ctx.fillStyle = COLORS.player.trail;
-            ctx.fillRect(this.x - 2, this.y, this.width + 4, this.height);
+            for (let i = 1; i <= 3; i++) {
+                ctx.fillRect(this.x - 2 * i, this.y, this.width + 4 * i, this.height);
+            }
         }
         
-        // Main body with rounded corners
+        // Alien body
         ctx.fillStyle = COLORS.player.main;
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.width, this.height, 6);
+        ctx.roundRect(this.x, this.y, this.width, this.height, 8);
         ctx.fill();
         
-        // Top highlight
+        // Alien head/antenna
         ctx.fillStyle = COLORS.player.secondary;
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.width, 12, 6);
+        ctx.roundRect(this.x, this.y, this.width, 15, 8);
         ctx.fill();
         
-        // Eye
+        // Alien eyes (two instead of one)
         ctx.fillStyle = 'white';
         if (this.facingRight) {
-            ctx.fillRect(this.x + this.width - 10, this.y + 6, 4, 4);
+            ctx.fillRect(this.x + this.width - 14, this.y + 4, 4, 4);
+            ctx.fillRect(this.x + this.width - 22, this.y + 4, 4, 4);
         } else {
-            ctx.fillRect(this.x + 6, this.y + 6, 4, 4);
+            ctx.fillRect(this.x + 10, this.y + 4, 4, 4);
+            ctx.fillRect(this.x + 18, this.y + 4, 4, 4);
         }
         
         ctx.restore();
@@ -257,22 +266,34 @@ class Goal {
         const baseColor = isActive ? COLORS.goal.active : COLORS.goal.inactive;
         const glowColor = isActive ? COLORS.goal.glowActive : COLORS.goal.glowInactive;
         
-        // Glow effect
-        ctx.fillStyle = glowColor;
-        ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
+        // Portal effect
+        for (let i = 0; i < 3; i++) {
+            ctx.fillStyle = glowColor;
+            ctx.beginPath();
+            ctx.ellipse(
+                this.x + this.width/2,
+                this.y + this.height/2,
+                this.width + i*8,
+                (this.height + i*8)/2,
+                0,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
         
-        // Flag pole with rounded top
+        // Portal center
         ctx.fillStyle = baseColor;
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, 6, this.height, [3, 3, 0, 0]);
-        ctx.fill();
-        
-        // Flag
-        ctx.beginPath();
-        ctx.moveTo(this.x + 6, this.y + 5);
-        ctx.lineTo(this.x + 26, this.y + 15);
-        ctx.lineTo(this.x + 6, this.y + 25);
-        ctx.closePath();
+        ctx.ellipse(
+            this.x + this.width/2,
+            this.y + this.height/2,
+            this.width/2,
+            this.height/4,
+            0,
+            0,
+            Math.PI * 2
+        );
         ctx.fill();
     }
 }
@@ -376,11 +397,54 @@ class DisappearingPlatform extends Platform {
     }
 }
 
+// Add new ChallengeToken class
+class ChallengeToken extends Coin {
+    constructor(x, y) {
+        super(x, y);
+        this.pulseTime = 0;
+    }
+
+    draw() {
+        if (!this.collected) {
+            this.pulseTime += 0.05;
+            const pulse = Math.sin(this.pulseTime) * 0.2 + 1;
+
+            // Outer glow with pulse
+            ctx.beginPath();
+            ctx.arc(this.x + this.width/2, this.y + this.height/2, (this.width/1.5) * pulse, 0, Math.PI * 2);
+            ctx.fillStyle = COLORS.challengeToken.glow;
+            ctx.fill();
+            
+            // Main token
+            ctx.beginPath();
+            ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/2, 0, Math.PI * 2);
+            ctx.fillStyle = COLORS.challengeToken.outer;
+            ctx.fill();
+            
+            // Inner star shape
+            ctx.save();
+            ctx.translate(this.x + this.width/2, this.y + this.height/2);
+            ctx.rotate(this.pulseTime);
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                const x = Math.cos(angle) * this.width/4;
+                const y = Math.sin(angle) * this.width/4;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = COLORS.challengeToken.inner;
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+}
+
 const levels = [
     // Level 1 - Tutorial
     {
         platforms: [
-            { x: 0, y: 750, width: 1200 },
+            { x: 0, y: 750, width: 1200 },  // Floor
             { x: 300, y: 600, width: 200 },
             { x: 600, y: 450, width: 200 },
         ],
@@ -391,6 +455,9 @@ const levels = [
         coins: [
             { x: 350, y: 550 },
             { x: 650, y: 400 },
+        ],
+        challengeTokens: [
+            { x: 400, y: 300 }
         ],
         goal: { x: 1100, y: 700 }
     },
@@ -602,6 +669,7 @@ let disappearingPlatforms = [];
 let spikes = [];
 let coins = [];
 let goal = null;
+let challengeTokens = [];
 const player = new Player();
 
 function loadLevel(levelIndex) {
@@ -618,6 +686,7 @@ function loadLevel(levelIndex) {
     ) || [];
     spikes = level.spikes.map(s => new Spike(s.x, s.y));
     coins = level.coins.map(c => new Coin(c.x, c.y));
+    challengeTokens = level.challengeTokens?.map(t => new ChallengeToken(t.x, t.y)) || [];
     goal = new Goal(level.goal.x, level.goal.y);
     player.reset();
 }
@@ -707,7 +776,7 @@ function formatTime(ms) {
 
 // Update drawScore function
 function drawScore() {
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'white';
     ctx.font = '20px Arial';
     ctx.textAlign = 'left';
     
@@ -716,11 +785,13 @@ function drawScore() {
     ctx.fillText('Deaths: ' + deathCount, 20, 90);
     
     const remainingCoins = coins.filter(coin => !coin.collected).length;
-    ctx.fillText('Coins remaining: ' + remainingCoins, 20, 120);
+    ctx.fillText('Coins: ' + (coins.length - remainingCoins) + '/' + coins.length, 20, 120);
     
-    // Draw speedrun timer
+    const challengeCount = challengeTokens.filter(token => token.collected).length;
+    ctx.fillText('Challenge Tokens: ' + challengeCount + '/' + challengeTokens.length, 20, 150);
+    
     const currentTime = gameState === GAME_STATE.PLAYING ? Date.now() - speedrunStartTime : speedrunTimer;
-    ctx.fillText('Time: ' + formatTime(currentTime), 20, 150);
+    ctx.fillText('Time: ' + formatTime(currentTime), 20, 180);
 }
 
 // Add menu rendering function
@@ -792,8 +863,59 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
+// Add challenge token collection functionality
+function checkChallengeTokenCollisions() {
+    challengeTokens.forEach(token => {
+        if (!token.collected &&
+            player.x < token.x + token.width &&
+            player.x + player.width > token.x &&
+            player.y < token.y + token.height &&
+            player.y + player.height > token.y) {
+            token.collected = true;
+            player.score += 500; // More points for challenge tokens
+            
+            // Add collection effect
+            createCollectionEffect(token.x, token.y);
+        }
+    });
+}
+
+// Add particle effect system
+const particles = [];
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = Math.random() * 4 + 2;
+        this.speedX = (Math.random() - 0.5) * 8;
+        this.speedY = (Math.random() - 0.5) * 8;
+        this.life = 1;
+    }
+
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.life -= 0.02;
+        this.size *= 0.97;
+    }
+
+    draw() {
+        ctx.fillStyle = this.color + Math.floor(this.life * 255).toString(16).padStart(2, '0');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function createCollectionEffect(x, y) {
+    for (let i = 0; i < 20; i++) {
+        particles.push(new Particle(x, y, COLORS.challengeToken.outer));
+    }
+}
+
 function gameLoop() {
-    // Fill background instead of clear
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -810,6 +932,7 @@ function gameLoop() {
             disappearingPlatforms.forEach(platform => platform.draw());
             spikes.forEach(spike => spike.draw());
             coins.forEach(coin => coin.draw());
+            challengeTokens.forEach(token => token.draw());
             goal.draw();
             player.draw();
             drawScore();
@@ -826,6 +949,14 @@ function gameLoop() {
             break;
             
         case GAME_STATE.PLAYING:
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
             // Update game objects
             movingPlatforms.forEach(platform => platform.update());
             verticalPlatforms.forEach(platform => platform.update());
@@ -837,6 +968,7 @@ function gameLoop() {
             checkCoinCollisions();
             checkSpikeCollisions();
             checkGoalCollision();
+            checkChallengeTokenCollisions();
 
             // Draw game objects
             platforms.forEach(platform => platform.draw());
@@ -845,9 +977,13 @@ function gameLoop() {
             disappearingPlatforms.forEach(platform => platform.draw());
             spikes.forEach(spike => spike.draw());
             coins.forEach(coin => coin.draw());
+            challengeTokens.forEach(token => token.draw());
             goal.draw();
             player.draw();
             drawScore();
+
+            // Draw particles
+            particles.forEach(particle => particle.draw());
             break;
     }
 
