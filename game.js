@@ -1,13 +1,13 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const GRAVITY = 0.5;
-const JUMP_FORCE = -12;
-const MOVEMENT_SPEED = 5.5;
-const DOUBLE_JUMP_FORCE = -10;
+const GRAVITY = 0.55;
+const JUMP_FORCE = -16;
+const MOVEMENT_SPEED = 6;
+const DOUBLE_JUMP_FORCE = -8;
 
-const AIR_RESISTANCE = 0.99;
-const GROUND_FRICTION = 0.90;
+const AIR_RESISTANCE = 0.98;
+const GROUND_FRICTION = 0.80;
 
 const GAME_STATE = {
     MENU: 'menu',
@@ -25,6 +25,8 @@ let speedrunStartTime = 0;
 class Player {
     constructor() {
         this.reset();
+        this.movingLeft = false;
+        this.movingRight = false;
     }
 
     reset() {
@@ -43,14 +45,17 @@ class Player {
         // Apply gravity
         this.velocityY += GRAVITY;
         
-        // Apply air resistance
+        // Apply air resistance only to vertical movement
         this.velocityY *= AIR_RESISTANCE;
         
-        // Apply movement with ground friction
-        if (!this.isJumping) {
-            this.velocityX *= GROUND_FRICTION;
+        // Handle horizontal movement directly instead of using velocity
+        if (this.movingLeft) {
+            this.velocityX = -MOVEMENT_SPEED;
+        } else if (this.movingRight) {
+            this.velocityX = MOVEMENT_SPEED;
         } else {
-            this.velocityX *= AIR_RESISTANCE;
+            // Only apply friction when no movement keys are pressed
+            this.velocityX *= GROUND_FRICTION;
         }
 
         // Update position
@@ -615,12 +620,14 @@ document.addEventListener('keydown', (event) => {
             break;
         case 'ArrowLeft':
             if (gameState === GAME_STATE.PLAYING) {
-                player.velocityX = -MOVEMENT_SPEED;
+                player.movingLeft = true;
+                player.movingRight = false;
             }
             break;
         case 'ArrowRight':
             if (gameState === GAME_STATE.PLAYING) {
-                player.velocityX = MOVEMENT_SPEED;
+                player.movingRight = true;
+                player.movingLeft = false;
             }
             break;
         case 'ArrowUp':
@@ -634,8 +641,10 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     switch(event.key) {
         case 'ArrowLeft':
+            player.movingLeft = false;
+            break;
         case 'ArrowRight':
-            player.velocityX = 0;
+            player.movingRight = false;
             break;
     }
 });
