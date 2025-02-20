@@ -990,146 +990,180 @@ const levels = [
         goal: { x: 1100, y: 100 }
     },
 
-    // Level 10 - Speed and Precision (More intense version)
+    // Level 10 - Speed Run Challenge
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },  // Ground
+            { x: 100, y: 600, width: 150 },  // Starting platform
+            { x: 1000, y: 300, width: 150 }  // Final platform
         ],
         movingPlatforms: [
-            { x: 200, y: 600, width: 100, xRange: 300, speed: 8 },   // Faster speed
-            { x: 500, y: 450, width: 100, xRange: 300, speed: 8 },
-            { x: 800, y: 300, width: 100, xRange: 300, speed: 8 }
+            // Fast horizontal platforms in a zigzag pattern
+            { x: 300, y: 600, width: 100, xRange: 150, speed: 6 },
+            { x: 600, y: 500, width: 100, xRange: 150, speed: 6 },
+            { x: 300, y: 400, width: 100, xRange: 150, speed: 6 },
+            { x: 600, y: 300, width: 100, xRange: 150, speed: 6 }
+        ],
+        verticalPlatforms: [],  // No vertical platforms in this speed run
+        disappearingPlatforms: [
+            // Quick stepping stones
+            { x: 400, y: 550, width: 80 },
+            { x: 700, y: 450, width: 80 },
+            { x: 400, y: 350, width: 80 }
+        ],
+        spikes: [
+            // Strategic spike placement
+            { x: 300, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
+            { x: 900, y: 730 },
+            // Mid-air hazards
+            { x: 500, y: 500 },
+            { x: 500, y: 300 }
+        ],
+        coins: [
+            { x: 350, y: 550 },
+            { x: 650, y: 450 },
+            { x: 350, y: 350 },
+            { x: 1050, y: 250 }
+        ],
+        lasers: [
+            // Fast laser timing
+            { x: 450, y: 450, width: 150, interval: 1500 },
+            { x: 450, y: 250, width: 150, interval: 1500, initialDelay: 750 }
+        ],
+        windZones: [
+            // Speed boosting wind
+            { x: 800, y: 200, width: 400, height: 300, force: 4 }
+        ],
+        bouncePads: [
+            // Speed boost pads
+            { x: 200, y: 500, strength: -25 },
+            { x: 500, y: 400, strength: -25 },
+            { x: 800, y: 300, strength: -25 }
+        ],
+        challengeTokens: [
+            { x: 1050, y: 200 }  // High-risk token
+        ],
+        goal: { x: 1100, y: 250 }
+    },
+
+    // Level 11 - Vertical Tower Challenge
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },  // Ground
+            { x: 100, y: 600, width: 150 },  // Starting platform
+            { x: 950, y: 100, width: 150 }   // Final platform
+        ],
+        movingPlatforms: [
+            // Horizontal moving platforms at different heights
+            { x: 300, y: 600, width: 100, xRange: 100, speed: 2 },
+            { x: 600, y: 450, width: 100, xRange: 100, speed: 2 },
+            { x: 300, y: 300, width: 100, xRange: 100, speed: 2 },
+            { x: 600, y: 150, width: 100, xRange: 100, speed: 2 }
         ],
         verticalPlatforms: [
-            { x: 400, y: 400, width: 100, yRange: 200, speed: 5 },   // Added vertical movement
-            { x: 700, y: 300, width: 100, yRange: 200, speed: 5 }
+            // Vertical elevator platforms
+            { x: 200, y: 400, width: 100, yRange: 500, speed: 2 },
+            { x: 800, y: 200, width: 100, yRange: 500, speed: 2 }
         ],
         disappearingPlatforms: [
-            { x: 300, y: 500, width: 80 },   // Smaller platforms
-            { x: 600, y: 350, width: 80 },
-            { x: 900, y: 200, width: 80 }
+            // Bridge gaps between sections
+            { x: 400, y: 500, width: 100 },
+            { x: 700, y: 350, width: 100 },
+            { x: 400, y: 200, width: 100 }
+        ],
+        spikes: [
+            // Ground hazards
+            { x: 300, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
+            { x: 900, y: 730 },
+            // Wall hazards
+            { x: 500, y: 400 },
+            { x: 500, y: 200 }
+        ],
+        coins: [
+            { x: 350, y: 550 },
+            { x: 650, y: 400 },
+            { x: 350, y: 250 },
+            { x: 950, y: 150 }
+        ],
+        lasers: [
+            // Vertical laser gates
+            { x: 450, y: 400, width: 100, interval: 2500 },
+            { x: 650, y: 250, width: 100, interval: 2500, initialDelay: 1250 }
+        ],
+        windZones: [
+            // Alternating wind currents
+            { x: 300, y: 400, width: 200, height: 200, force: 2 },
+            { x: 700, y: 200, width: 200, height: 200, force: -2 }
+        ],
+        bouncePads: [
+            // Recovery bounce pads
+            { x: 150, y: 500, strength: -20 },
+            { x: 850, y: 300, strength: -20 }
+        ],
+        challengeTokens: [
+            { x: 950, y: 50 }  // At the very top
+        ],
+        goal: { x: 1050, y: 50 }
+    },
+
+    // Level 12 - Master Challenge (Fixed version)
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },    // Ground
+            { x: 200, y: 600, width: 200 },    // Starting area
+            { x: 500, y: 500, width: 200 },    // First checkpoint
+            { x: 800, y: 400, width: 200 },    // Second checkpoint
+            { x: 500, y: 300, width: 200 },    // Third checkpoint
+            { x: 200, y: 200, width: 200 }     // Final area
+        ],
+        movingPlatforms: [
+            { x: 300, y: 550, width: 100, xRange: 150, speed: 4 },
+            { x: 600, y: 450, width: 100, xRange: 150, speed: 4 },
+            { x: 900, y: 350, width: 100, xRange: 150, speed: 4 },
+            { x: 600, y: 250, width: 100, xRange: 150, speed: 4 }
+        ],
+        verticalPlatforms: [
+            { x: 400, y: 400, width: 100, yRange: 200, speed: 3 },
+            { x: 700, y: 300, width: 100, yRange: 200, speed: 3 },
+            { x: 400, y: 200, width: 100, yRange: 200, speed: 3 }
+        ],
+        disappearingPlatforms: [
+            { x: 350, y: 500, width: 100 },
+            { x: 650, y: 400, width: 100 },
+            { x: 350, y: 300, width: 100 }
         ],
         spikes: [
             { x: 300, y: 730 },
             { x: 500, y: 730 },
             { x: 700, y: 730 },
-            { x: 900, y: 730 },
-            { x: 400, y: 300 },  // Mid-air spikes
-            { x: 800, y: 150 }
+            { x: 900, y: 730 }
         ],
         coins: [
-            { x: 250, y: 550 },
-            { x: 550, y: 400 },
-            { x: 850, y: 250 }
+            { x: 350, y: 550 },
+            { x: 650, y: 400 },
+            { x: 350, y: 250 }
         ],
         lasers: [
-            { x: 200, y: 400, width: 300, interval: 1000 },
-            { x: 700, y: 250, width: 300, interval: 1000, initialDelay: 500 }
+            { x: 300, y: 450, width: 200, interval: 2000 },
+            { x: 600, y: 350, width: 200, interval: 2000, initialDelay: 1000 },
+            { x: 300, y: 250, width: 200, interval: 2000 }
         ],
         windZones: [
-            { x: 0, y: 0, width: 1200, height: 400, force: 4 }
+            { x: 400, y: 0, width: 400, height: 400, force: 3 },
+            { x: 800, y: 0, width: 400, height: 400, force: -3 }
         ],
         bouncePads: [
-            { x: 400, y: 600, strength: -25 },
-            { x: 800, y: 400, strength: -25 }
+            { x: 300, y: 600, strength: -25 },
+            { x: 600, y: 500, strength: -25 },
+            { x: 900, y: 400, strength: -25 },
+            { x: 600, y: 300, strength: -25 }
         ],
         challengeTokens: [
-            { x: 1000, y: 50 }  // Much higher and harder to reach
-        ],
-        goal: { x: 1100, y: 200 }
-    },
-
-    // Level 11 - Extreme Challenge
-    {
-        platforms: [
-            { x: 0, y: 750, width: 1200 },  // Ground
-            { x: 200, y: 600, width: 100 },  // Added some static platforms
-            { x: 800, y: 600, width: 100 },
-        ],
-        movingPlatforms: [
-            { x: 200, y: 500, width: 80, xRange: 400, speed: 10 }  // Extremely fast
-        ],
-        verticalPlatforms: [
-            { x: 200, y: 300, width: 80, yRange: 300, speed: 6 },
-            { x: 400, y: 400, width: 80, yRange: 300, speed: 6 },
-            { x: 600, y: 300, width: 80, yRange: 300, speed: 6 }
-        ],
-        disappearingPlatforms: [],
-        spikes: [
-            { x: 200, y: 730 },
-            { x: 400, y: 730 },
-            { x: 600, y: 730 },
-            { x: 800, y: 730 },
-            { x: 400, y: 300 },  // Mid-air spikes
-            { x: 800, y: 150 }
-        ],
-        coins: [
-            { x: 220, y: 550 },
-            { x: 520, y: 400 },
-            { x: 820, y: 250 }
-        ],
-        lasers: [
-            { x: 200, y: 150, width: 400, interval: 800 },
-            { x: 600, y: 100, width: 400, interval: 800, initialDelay: 400 }
-        ],
-        windZones: [
-            { x: 300, y: 0, width: 400, height: 400, force: 8 },
-            { x: 700, y: 0, width: 400, height: 400, force: -8 }
-        ],
-        bouncePads: [],
-        challengeTokens: [
-            { x: 1020, y: 30 }  // Requires mastering disappearing platforms
-        ],
-        goal: { x: 1100, y: 600 }
-    },
-
-    // Level 12 - Master Challenge
-    {
-        platforms: [
-            { x: 0, y: 750, width: 1200 },  // Ground
-            { x: 200, y: 600, width: 200 },  // Wider platforms for more control
-            { x: 600, y: 600, width: 200 },
-            { x: 400, y: 450, width: 200 },  // Middle platform for safety
-        ],
-        movingPlatforms: [
-            { x: 200, y: 300, width: 80, xRange: 400, speed: 12 },
-            { x: 800, y: 300, width: 80, xRange: 400, speed: 12 }
-        ],
-        verticalPlatforms: [
-            { x: 500, y: 200, width: 150, yRange: 300, speed: 3 }  // Wider and slower
-        ],
-        disappearingPlatforms: [
-            { x: 300, y: 150, width: 100 },
-            { x: 700, y: 150, width: 100 }
-        ],
-        spikes: [
-            { x: 250, y: 730 },
-            { x: 450, y: 730 },
-            { x: 650, y: 730 },
-            { x: 850, y: 730 }
-        ],
-        coins: [
-            { x: 320, y: 400 },
-            { x: 720, y: 400 },
-            { x: 420, y: 250 },
-            { x: 620, y: 250 },
-            { x: 520, y: 100 }
-        ],
-        lasers: [
-            { x: 200, y: 100, width: 400, interval: 600 },
-            { x: 600, y: 150, width: 400, interval: 600, initialDelay: 300 },
-            { x: 400, y: 200, width: 400, interval: 600, initialDelay: 150 }
-        ],
-        windZones: [
-            { x: 0, y: 0, width: 1200, height: 300, force: 10 },
-            { x: 0, y: 300, width: 1200, height: 300, force: -10 }
-        ],
-        bouncePads: [
-            { x: 300, y: 500, strength: -25 },
-            { x: 700, y: 500, strength: -25 }
-        ],
-        challengeTokens: [
-            { x: 500, y: 50 }  // Slightly more accessible but still very challenging
+            { x: 300, y: 50 }
         ],
         goal: { x: 1100, y: 700 }
     }
@@ -1200,34 +1234,67 @@ function drawLevelComplete() {
 }
 
 function loadLevel(levelIndex) {
-    const level = levels[levelIndex];
-    platforms = level.platforms.map(p => new Platform(p.x, p.y, p.width));
-    movingPlatforms = level.movingPlatforms.map(p => 
-        new MovingPlatform(p.x, p.y, p.width, p.xRange, p.speed)
-    );
-    verticalPlatforms = level.verticalPlatforms.map(p =>
-        new VerticalPlatform(p.x, p.y, p.width, p.yRange, p.speed)
-    );
-    disappearingPlatforms = level.disappearingPlatforms?.map(p =>
-        new DisappearingPlatform(p.x, p.y, p.width)
-    ) || [];
-    spikes = level.spikes.map(s => new Spike(s.x, s.y));
-    coins = level.coins.map(c => new Coin(c.x, c.y));
-    challengeTokens = level.challengeTokens?.map(t => new ChallengeToken(t.x, t.y)) || [];
-    goal = new Goal(level.goal.x, level.goal.y);
-    player.reset();
-    levelStarted = false;
-    currentLevelStartTime = null;  // Don't set time until first input
-    
-    // Start tracking full run time when starting from level 1
-    if (currentLevel === 0 && gameState === GAME_STATE.PLAYING) {
-        fullRunStartTime = Date.now();
+    try {
+        const level = levels[levelIndex];
+        if (!level) {
+            console.error('Invalid level index:', levelIndex);
+            gameState = GAME_STATE.MENU;
+            return;
+        }
+
+        // Reset all arrays first
+        platforms = [];
+        movingPlatforms = [];
+        verticalPlatforms = [];
+        disappearingPlatforms = [];
+        spikes = [];
+        coins = [];
+        lasers = [];
+        windZones = [];
+        bouncePads = [];
+        challengeTokens = [];
+
+        // Then load new level elements
+        platforms = level.platforms?.map(p => new Platform(p.x, p.y, p.width)) || [];
+        movingPlatforms = level.movingPlatforms?.map(p => 
+            new MovingPlatform(p.x, p.y, p.width, p.xRange, p.speed)
+        ) || [];
+        verticalPlatforms = level.verticalPlatforms?.map(p =>
+            new VerticalPlatform(p.x, p.y, p.width, p.yRange, p.speed)
+        ) || [];
+        disappearingPlatforms = level.disappearingPlatforms?.map(p =>
+            new DisappearingPlatform(p.x, p.y, p.width)
+        ) || [];
+        spikes = level.spikes?.map(s => new Spike(s.x, s.y)) || [];
+        coins = level.coins?.map(c => new Coin(c.x, c.y)) || [];
+        lasers = level.lasers?.map(l => 
+            new LaserBeam(l.x, l.y, l.width, l.interval, l.initialDelay)
+        ) || [];
+        windZones = level.windZones?.map(w => 
+            new WindZone(w.x, w.y, w.width, w.height, w.force)
+        ) || [];
+        bouncePads = level.bouncePads?.map(b => 
+            new BouncePad(b.x, b.y, b.strength)
+        ) || [];
+        challengeTokens = level.challengeTokens?.map(t => 
+            new ChallengeToken(t.x, t.y)
+        ) || [];
+
+        if (level.goal) {
+            goal = new Goal(level.goal.x, level.goal.y);
+        }
+
+        player.reset();
+        levelStarted = false;
+        currentLevelStartTime = null;
+
+        if (currentLevel === 0 && gameState === GAME_STATE.PLAYING) {
+            fullRunStartTime = Date.now();
+        }
+    } catch (error) {
+        console.error('Error loading level:', error);
+        gameState = GAME_STATE.MENU;
     }
-    
-    // Add new obstacles
-    lasers = level.lasers?.map(l => new LaserBeam(l.x, l.y, l.width, l.interval, l.delay)) || [];
-    bouncePads = level.bouncePads?.map(b => new BouncePad(b.x, b.y, b.strength)) || [];
-    windZones = level.windZones?.map(w => new WindZone(w.x, w.y, w.width, w.height, w.force)) || [];
 }
 
 function checkPlatformCollisions() {
@@ -1411,55 +1478,52 @@ function drawLevelSelect() {
         ctx.fillText('Best Full Run: --:--.--', canvas.width/2, 180);
     }
     
-    // Adjust startY to account for new header content
-    const startY = 220;
-    
+    // Adjust layout for 12 levels
     const levelsPerRow = 4;
-    const buttonSize = 120;  // Increased size for more info
+    const rows = Math.ceil(levels.length / levelsPerRow);
+    const buttonSize = 100;  // Slightly smaller buttons
     const padding = 20;
-    const startX = (canvas.width - (levelsPerRow * (buttonSize + padding))) / 2;
+    const totalWidth = levelsPerRow * (buttonSize + padding) - padding;
+    const startX = (canvas.width - totalWidth) / 2;
+    const startY = 250;  // Start lower to accommodate header
     
-    levels.forEach((level, index) => {
-        const row = Math.floor(index / levelsPerRow);
-        const col = index % levelsPerRow;
+    // Draw level buttons
+    for (let i = 0; i < levels.length; i++) {
+        const row = Math.floor(i / levelsPerRow);
+        const col = i % levelsPerRow;
         const x = startX + col * (buttonSize + padding);
         const y = startY + row * (buttonSize + padding);
         
-        // Level button background
+        // Button background
         ctx.fillStyle = '#2a2a4a';
         ctx.fillRect(x, y, buttonSize, buttonSize);
         
         // Level number
         ctx.fillStyle = 'white';
-        ctx.font = '32px Arial';
-        ctx.fillText(index + 1, x + buttonSize/2, y + 30);
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText((i + 1), x + buttonSize/2, y + 30);
         
-        // Stats if exists
-        if (levelStats[index]) {
-            ctx.font = '16px Arial';
-            ctx.fillText('PB: ' + formatTime(levelStats[index].bestTime), 
-                x + buttonSize/2, y + 60);
-                
-            // Challenge token display
-            if (levelStats[index].challengeTokens > 0) {
+        // Best time if exists
+        if (levelStats[i]) {
+            ctx.font = '14px Arial';
+            ctx.fillText(formatTime(levelStats[i].bestTime), x + buttonSize/2, y + 50);
+            
+            // Challenge tokens
+            if (levelStats[i].challengeTokens > 0) {
                 ctx.fillStyle = COLORS.challengeToken.outer;
-                ctx.fillText(`★ ${levelStats[index].challengeTokens}`, 
-                    x + buttonSize/2, y + 85);
+                ctx.fillText(`★ ${levelStats[i].challengeTokens}`, x + buttonSize/2, y + 70);
             }
         } else {
-            ctx.font = '16px Arial';
-            ctx.fillText('Not completed', x + buttonSize/2, y + 60);
+            ctx.font = '14px Arial';
+            ctx.fillText('---', x + buttonSize/2, y + 50);
         }
-        
-        // Show total coins in level
-        ctx.fillStyle = COLORS.coin.outer;
-        ctx.font = '14px Arial';
-        ctx.fillText(`${levels[index].coins.length} coins`, 
-            x + buttonSize/2, y + buttonSize - 20);
-    });
+    }
     
+    // Return to menu text
     ctx.fillStyle = 'white';
     ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
     ctx.fillText('Press ESC to return to main menu', canvas.width/2, canvas.height - 50);
 }
 
@@ -1690,6 +1754,9 @@ function gameLoop() {
             movingPlatforms.forEach(platform => platform.update());
             verticalPlatforms.forEach(platform => platform.update());
             disappearingPlatforms.forEach(platform => platform.update());
+            lasers.forEach(laser => laser.update());
+            bouncePads.forEach(pad => pad.update());
+            windZones.forEach(zone => zone.update(player));
             player.update();
             
             // Check collisions
@@ -1708,6 +1775,9 @@ function gameLoop() {
             spikes.forEach(spike => spike.draw());
             coins.forEach(coin => coin.draw());
             challengeTokens.forEach(token => token.draw());
+            windZones.forEach(zone => zone.draw());
+            bouncePads.forEach(pad => pad.draw());
+            lasers.forEach(laser => laser.draw());
             goal.draw();
             player.draw();
             drawScore();
@@ -1735,15 +1805,6 @@ function gameLoop() {
             ctx.fillStyle = COLORS.ground.glow;
             ctx.fillRect(0, canvas.height - groundHeight - 2, canvas.width, 2);
 
-            // Update new obstacles
-            lasers.forEach(laser => laser.update());
-            bouncePads.forEach(pad => pad.update());
-            windZones.forEach(zone => zone.update(player));
-            
-            // Draw new obstacles
-            windZones.forEach(zone => zone.draw());
-            bouncePads.forEach(pad => pad.draw());
-            lasers.forEach(laser => laser.draw());
             break;
     }
 
@@ -1777,32 +1838,33 @@ canvas.addEventListener('click', (event) => {
     if (gameState !== GAME_STATE.LEVEL_SELECT) return;
     
     const rect = canvas.getBoundingClientRect();
-    // Calculate click position relative to canvas scale
-    const scaleX = canvas.width / canvas.clientWidth;
-    const scaleY = canvas.height / canvas.clientHeight;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     const x = (event.clientX - rect.left) * scaleX;
     const y = (event.clientY - rect.top) * scaleY;
     
     const levelsPerRow = 4;
-    const buttonSize = 120;  // Match the size we use in drawLevelSelect
+    const buttonSize = 100;  // Match size from drawLevelSelect
     const padding = 20;
-    const startX = (canvas.width - (levelsPerRow * (buttonSize + padding))) / 2;
-    const startY = 220;  // Match the startY we use in drawLevelSelect
+    const totalWidth = levelsPerRow * (buttonSize + padding) - padding;
+    const startX = (canvas.width - totalWidth) / 2;
+    const startY = 250;  // Match startY from drawLevelSelect
     
-    levels.forEach((level, index) => {
-        const row = Math.floor(index / levelsPerRow);
-        const col = index % levelsPerRow;
+    for (let i = 0; i < levels.length; i++) {
+        const row = Math.floor(i / levelsPerRow);
+        const col = i % levelsPerRow;
         const buttonX = startX + col * (buttonSize + padding);
         const buttonY = startY + row * (buttonSize + padding);
         
         if (x >= buttonX && x <= buttonX + buttonSize &&
             y >= buttonY && y <= buttonY + buttonSize) {
-            currentLevel = index;
+            currentLevel = i;
             gameState = GAME_STATE.PLAYING;
             deathCount = 0;
             loadLevel(currentLevel);
+            return;  // Exit after finding the clicked level
         }
-    });
+    }
 }); 
 
 // Update all level goals to be positioned better with new size
