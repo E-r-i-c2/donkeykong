@@ -657,6 +657,128 @@ class WindZone {
     }
 }
 
+// Add these classes right before the levels array starts
+
+class Portal {
+    constructor(x, y, exitX, exitY, width, height, color) {
+        this.x = x;
+        this.y = y;
+        this.exitX = exitX;
+        this.exitY = exitY;
+        this.width = width;
+        this.height = height;
+        this.color = color;
+        this.pulseTime = 0;
+    }
+
+    draw() {
+        this.pulseTime += 0.05;
+        const pulse = Math.sin(this.pulseTime) * 0.2 + 1;
+        ctx.fillStyle = this.color + '44';
+        ctx.beginPath();
+        ctx.ellipse(this.x + this.width/2, this.y + this.height/2, this.width * pulse, this.height * pulse, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(this.x + this.width/2, this.y + this.height/2, this.width/2, this.height/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    teleport(player) {
+        player.x = this.exitX;
+        player.y = this.exitY;
+    }
+}
+
+class GravityWell {
+    constructor(x, y, radius, force) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.force = force;
+        this.pulseTime = 0;
+    }
+
+    draw() {
+        this.pulseTime += 0.03;
+        const pulse = Math.sin(this.pulseTime) * 0.2 + 1;
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        const color = this.force > 0 ? '0, 255, 255' : '255, 0, 255';
+        gradient.addColorStop(0, `rgba(${color}, 0.3)`);
+        gradient.addColorStop(0.5, `rgba(${color}, 0.1)`);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * pulse, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    affect(player) {
+        const dx = this.x - (player.x + player.width/2);
+        const dy = this.y - (player.y + player.height/2);
+        const distance = Math.sqrt(dx*dx + dy*dy);
+        if (distance < this.radius) {
+            const force = (1 - distance/this.radius) * this.force;
+            player.velocityX += (dx/distance) * force * 0.1;
+            player.velocityY += (dy/distance) * force * 0.1;
+        }
+    }
+}
+
+class VerticalBouncePad {
+    constructor(x, y, height, strength) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = height;
+        this.strength = strength;
+        this.activated = false;
+    }
+
+    draw() {
+        ctx.fillStyle = this.activated ? '#00FF00' : '#00AA00';
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.width, this.y);
+        ctx.lineTo(this.x, this.y + this.height/2);
+        ctx.lineTo(this.x + this.width, this.y + this.height);
+        ctx.fill();
+    }
+
+    bounce(player) {
+        player.velocityX = this.strength;
+        this.activated = true;
+        setTimeout(() => this.activated = false, 200);
+    }
+}
+
+// Add these collision check functions right after the other collision check functions
+function checkPortalCollisions() {
+    portals.forEach(portal => {
+        if (checkCollision(player, portal)) {
+            portal.teleport(player);
+        }
+    });
+}
+
+function checkVerticalBouncePadCollisions() {
+    verticalBouncePads.forEach(pad => {
+        if (checkCollision(player, {
+            x: pad.x,
+            y: pad.y,
+            width: pad.width,
+            height: pad.height
+        })) {
+            pad.bounce(player);
+        }
+    });
+}
+
+// Add these variables at the top of the file with other globals
+let portals = [];
+let gravityWells = [];
+let verticalBouncePads = [];
+
 const levels = [
     // Level 1 - Basic Movement Tutorial
     {
@@ -1383,68 +1505,217 @@ const levels = [
         goal: { x: 1050, y: 100 }
     },
 
-    // Level 13 - Laser Dance
+    // Level 17 - Portal Introduction
     {
         platforms: [
             { x: 0, y: 750, width: 1200 },    // Ground
-            { x: 100, y: 600, width: 100 },   // Start
-            { x: 1000, y: 100, width: 100 }   // End
+            { x: 100, y: 600, width: 150 },   // Start
+            { x: 1000, y: 100, width: 150 }   // End
         ],
         movingPlatforms: [
-            // Small safe platforms between laser patterns
-            { x: 300, y: 500, width: 60, xRange: 100, speed: 2 },
-            { x: 600, y: 350, width: 60, xRange: 100, speed: 2 },
-            { x: 900, y: 200, width: 60, xRange: 100, speed: 2 }
+            { x: 400, y: 500, width: 80, xRange: 200, speed: 3 }
         ],
         verticalPlatforms: [
-            // Escape platforms
-            { x: 200, y: 300, width: 60, yRange: 200, speed: 2 },
-            { x: 800, y: 200, width: 60, yRange: 200, speed: 2 }
+            { x: 700, y: 300, width: 80, yRange: 300, speed: 3 }
+        ],
+        portals: [  // Introduce portals gently
+            { x: 200, y: 400, exitX: 800, exitY: 200, width: 40, height: 80, color: '#00FFFF' }
         ],
         disappearingPlatforms: [
-            // Emergency platforms
-            { x: 400, y: 400, width: 60 },
-            { x: 700, y: 250, width: 60 }
+            { x: 500, y: 400, width: 80 }
         ],
         spikes: [
-            // Minimal spikes to focus on laser challenge
             { x: 300, y: 730 },
-            { x: 600, y: 730 },
-            { x: 900, y: 730 }
-        ],
-        lasers: [
-            // Complex laser pattern that creates a "dance" sequence
-            // Horizontal lasers
-            { x: 200, y: 550, width: 300, interval: 1200, initialDelay: 0 },
-            { x: 700, y: 550, width: 300, interval: 1200, initialDelay: 600 },
-            { x: 200, y: 400, width: 300, interval: 1200, initialDelay: 400 },
-            { x: 700, y: 400, width: 300, interval: 1200, initialDelay: 1000 },
-            { x: 200, y: 250, width: 300, interval: 1200, initialDelay: 800 },
-            { x: 700, y: 250, width: 300, interval: 1200, initialDelay: 200 },
-            // Vertical lasers
-            { x: 500, y: 200, width: 50, interval: 2000, initialDelay: 0, vertical: true },
-            { x: 300, y: 300, width: 50, interval: 2000, initialDelay: 1000, vertical: true },
-            { x: 700, y: 300, width: 50, interval: 2000, initialDelay: 500, vertical: true }
-        ],
-        windZones: [], // No wind to keep focus on laser timing
-        bouncePads: [
-            // Strategic escape routes
-            { x: 150, y: 500, strength: -15 },
-            { x: 450, y: 350, strength: -15 },
-            { x: 750, y: 200, strength: -15 }
+            { x: 500, y: 730 },
+            { x: 700, y: 730 }
         ],
         coins: [
             { x: 350, y: 450 },
             { x: 650, y: 300 },
             { x: 950, y: 150 }
         ],
+        lasers: [
+            { x: 400, y: 350, width: 300, interval: 2000 }
+        ],
+        bouncePads: [
+            { x: 200, y: 500, width: 100, strength: -30 }
+        ],
+        verticalBouncePads: [  // Introduce vertical bounce pads
+            { x: 900, y: 200, height: 100, strength: 20 }
+        ],
         challengeTokens: [
-            { x: 500, y: 50 }  // Requires perfect laser timing
+            { x: 950, y: 50 }
+        ],
+        goal: { x: 1050, y: 50 }
+    },
+
+    // Update level 18 to be more distinct
+    // Level 18 - Portal Mastery
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },
+            { x: 100, y: 600, width: 150 },
+            { x: 1000, y: 100, width: 150 }
+        ],
+        movingPlatforms: [
+            { x: 300, y: 500, width: 80, xRange: 200, speed: 3 },
+            { x: 700, y: 300, width: 80, xRange: 200, speed: 3 }
+        ],
+        verticalPlatforms: [
+            { x: 500, y: 200, width: 80, yRange: 400, speed: 4 }
+        ],
+        portals: [  // Complex portal chain
+            { x: 200, y: 400, exitX: 800, exitY: 200, width: 40, height: 80, color: '#00FFFF' },
+            { x: 600, y: 500, exitX: 400, exitY: 150, width: 40, height: 80, color: '#FF00FF' },
+            { x: 300, y: 200, exitX: 900, exitY: 400, width: 40, height: 80, color: '#00FF00' }
+        ],
+        disappearingPlatforms: [
+            { x: 400, y: 450, width: 80 },
+            { x: 800, y: 250, width: 80 }
+        ],
+        spikes: [
+            { x: 300, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
+            { x: 900, y: 730 }
+        ],
+        coins: [
+            { x: 350, y: 450 },
+            { x: 650, y: 300 },
+            { x: 950, y: 150 }
+        ],
+        lasers: [
+            { x: 300, y: 350, width: 400, interval: 2000 },
+            { x: 500, y: 200, width: 400, interval: 2000, initialDelay: 1000 }
+        ],
+        bouncePads: [
+            { x: 200, y: 500, width: 120, strength: -35 },
+            { x: 800, y: 300, width: 120, strength: -35 }
+        ],
+        verticalBouncePads: [
+            { x: 400, y: 300, height: 120, strength: 25 },
+            { x: 900, y: 200, height: 120, strength: 25 }
+        ],
+        challengeTokens: [
+            { x: 950, y: 50 }
+        ],
+        goal: { x: 1050, y: 50 }
+    },
+
+    // Update level 19 to focus more on gravity wells
+    // Level 19 - Gravity Wells
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },
+            { x: 100, y: 600, width: 150 },
+            { x: 1000, y: 200, width: 150 }
+        ],
+        movingPlatforms: [
+            { x: 400, y: 400, width: 100, xRange: 300, speed: 4 }
+        ],
+        verticalPlatforms: [
+            { x: 800, y: 200, width: 100, yRange: 400, speed: 3 }
+        ],
+        gravityWells: [  // Complex gravity well pattern
+            { x: 300, y: 300, radius: 150, force: 2 },
+            { x: 700, y: 400, radius: 150, force: -2 },
+            { x: 500, y: 200, radius: 150, force: 2 },
+            { x: 900, y: 300, radius: 150, force: -2 }
+        ],
+        portals: [
+            { x: 200, y: 500, exitX: 900, exitY: 300, width: 40, height: 80, color: '#00FF00' }
+        ],
+        spikes: [
+            { x: 300, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
+            { x: 900, y: 730 }
+        ],
+        coins: [
+            { x: 350, y: 450 },
+            { x: 650, y: 300 },
+            { x: 950, y: 150 }
+        ],
+        lasers: [
+            { x: 400, y: 350, width: 300, interval: 1500 },
+            { x: 700, y: 250, width: 300, interval: 1500, initialDelay: 750 }
+        ],
+        bouncePads: [
+            { x: 200, y: 500, width: 150, strength: -40 },
+            { x: 800, y: 300, width: 150, strength: -40 }
+        ],
+        verticalBouncePads: [
+            { x: 500, y: 200, height: 150, strength: 30 }
+        ],
+        challengeTokens: [
+            { x: 950, y: 50 }
+        ],
+        goal: { x: 1050, y: 150 }
+    },
+
+    // Update level 20 to be a true final challenge
+    // Level 20 - The Ultimate Challenge
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },
+            { x: 100, y: 600, width: 100 },
+            { x: 1000, y: 100, width: 100 }
+        ],
+        movingPlatforms: [
+            { x: 300, y: 500, width: 80, xRange: 200, speed: 5 },
+            { x: 700, y: 300, width: 80, xRange: 200, speed: 5 }
+        ],
+        verticalPlatforms: [
+            { x: 500, y: 200, width: 80, yRange: 400, speed: 5 }
+        ],
+        portals: [
+            { x: 200, y: 400, exitX: 800, exitY: 200, width: 40, height: 80, color: '#FF00FF' },
+            { x: 400, y: 300, exitX: 600, exitY: 500, width: 40, height: 80, color: '#00FFFF' }
+        ],
+        gravityWells: [
+            { x: 400, y: 400, radius: 200, force: 3 },
+            { x: 800, y: 300, radius: 200, force: -3 }
+        ],
+        disappearingPlatforms: [
+            { x: 300, y: 450, width: 80 },
+            { x: 500, y: 350, width: 80 },
+            { x: 700, y: 250, width: 80 }
+        ],
+        spikes: [
+            { x: 300, y: 730 },
+            { x: 500, y: 730 },
+            { x: 700, y: 730 },
+            { x: 900, y: 730 },
+            { x: 400, y: 500 },
+            { x: 600, y: 350 },
+            { x: 800, y: 200 }
+        ],
+        coins: [
+            { x: 350, y: 450 },
+            { x: 650, y: 300 },
+            { x: 950, y: 150 }
+        ],
+        lasers: [
+            { x: 200, y: 450, width: 300, interval: 1200 },
+            { x: 600, y: 300, width: 300, interval: 1200, initialDelay: 600 },
+            { x: 400, y: 150, width: 300, interval: 1200, initialDelay: 300 }
+        ],
+        bouncePads: [
+            { x: 150, y: 500, width: 200, strength: -45 },
+            { x: 750, y: 300, width: 200, strength: -45 }
+        ],
+        verticalBouncePads: [
+            { x: 300, y: 200, height: 200, strength: 35 },
+            { x: 900, y: 300, height: 200, strength: 35 }
+        ],
+        challengeTokens: [
+            { x: 950, y: 50 }
         ],
         goal: { x: 1050, y: 50 }
     }
 ];
 
+// Also add them to the list of variables that get initialized with the other game objects (around line 1200)
 let currentLevel = 0;
 let platforms = [];
 let movingPlatforms = [];
@@ -1452,6 +1723,9 @@ let verticalPlatforms = [];
 let disappearingPlatforms = [];
 let spikes = [];
 let coins = [];
+let lasers = [];
+let windZones = [];
+let bouncePads = [];
 let goal = null;
 let challengeTokens = [];
 const player = new Player();
@@ -1512,13 +1786,8 @@ function drawLevelComplete() {
 function loadLevel(levelIndex) {
     try {
         const level = levels[levelIndex];
-        if (!level) {
-            console.error('Invalid level index:', levelIndex);
-            gameState = GAME_STATE.MENU;
-            return;
-        }
-
-        // Reset all arrays first
+        
+        // Reset all arrays
         platforms = [];
         movingPlatforms = [];
         verticalPlatforms = [];
@@ -1529,8 +1798,11 @@ function loadLevel(levelIndex) {
         windZones = [];
         bouncePads = [];
         challengeTokens = [];
+        portals = [];          // Reset new mechanics
+        gravityWells = [];
+        verticalBouncePads = [];
 
-        // Then load new level elements
+        // Load all level elements
         platforms = level.platforms?.map(p => new Platform(p.x, p.y, p.width)) || [];
         movingPlatforms = level.movingPlatforms?.map(p => 
             new MovingPlatform(p.x, p.y, p.width, p.xRange, p.speed)
@@ -1550,10 +1822,21 @@ function loadLevel(levelIndex) {
             new WindZone(w.x, w.y, w.width, w.height, w.force)
         ) || [];
         bouncePads = level.bouncePads?.map(b => 
-            new BouncePad(b.x, b.y, b.strength)
+            new BouncePad(b.x, b.y, b.width || 40, b.strength)
         ) || [];
         challengeTokens = level.challengeTokens?.map(t => 
             new ChallengeToken(t.x, t.y)
+        ) || [];
+        
+        // Load new mechanics
+        portals = level.portals?.map(p => 
+            new Portal(p.x, p.y, p.exitX, p.exitY, p.width, p.height, p.color)
+        ) || [];
+        gravityWells = level.gravityWells?.map(g => 
+            new GravityWell(g.x, g.y, g.radius, g.force)
+        ) || [];
+        verticalBouncePads = level.verticalBouncePads?.map(b => 
+            new VerticalBouncePad(b.x, b.y, b.height, b.strength)
         ) || [];
 
         if (level.goal) {
@@ -1563,10 +1846,6 @@ function loadLevel(levelIndex) {
         player.reset();
         levelStarted = false;
         currentLevelStartTime = null;
-
-        if (currentLevel === 0 && gameState === GAME_STATE.PLAYING) {
-            fullRunStartTime = Date.now();
-        }
     } catch (error) {
         console.error('Error loading level:', error);
         gameState = GAME_STATE.MENU;
@@ -2112,14 +2391,6 @@ function gameLoop() {
             break;
             
         case GAME_STATE.PLAYING:
-            // Update particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                if (particles[i].life <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-
             // Update game objects
             movingPlatforms.forEach(platform => platform.update());
             verticalPlatforms.forEach(platform => platform.update());
@@ -2127,6 +2398,10 @@ function gameLoop() {
             lasers.forEach(laser => laser.update());
             bouncePads.forEach(pad => pad.update());
             windZones.forEach(zone => zone.update(player));
+            
+            // Update new mechanics
+            gravityWells.forEach(well => well.affect(player));
+            
             player.update();
             
             // Check collisions
@@ -2136,8 +2411,12 @@ function gameLoop() {
             checkObstacleCollisions();
             checkGoalCollision();
             checkChallengeTokenCollisions();
+            
+            // Check new mechanic collisions
+            checkPortalCollisions();
+            checkVerticalBouncePadCollisions();
 
-            // Draw game objects
+            // Draw everything
             platforms.forEach(platform => platform.draw());
             movingPlatforms.forEach(platform => platform.draw());
             verticalPlatforms.forEach(platform => platform.draw());
@@ -2148,33 +2427,15 @@ function gameLoop() {
             windZones.forEach(zone => zone.draw());
             bouncePads.forEach(pad => pad.draw());
             lasers.forEach(laser => laser.draw());
+            
+            // Draw new mechanics
+            gravityWells.forEach(well => well.draw());
+            portals.forEach(portal => portal.draw());
+            verticalBouncePads.forEach(pad => pad.draw());
+            
             goal.draw();
             player.draw();
             drawScore();
-
-            // Draw particles
-            particles.forEach(particle => particle.draw());
-
-            // Draw ground decorative elements after everything else
-            const groundHeight = 50;
-            ctx.fillStyle = COLORS.ground.main;
-            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
-            
-            // Ground pattern
-            ctx.fillStyle = COLORS.ground.pattern;
-            const patternSize = 30;
-            for (let x = 0; x < canvas.width; x += patternSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, canvas.height - groundHeight);
-                ctx.lineTo(x + patternSize/2, canvas.height);
-                ctx.lineTo(x + patternSize, canvas.height - groundHeight);
-                ctx.fill();
-            }
-            
-            // Ground glow
-            ctx.fillStyle = COLORS.ground.glow;
-            ctx.fillRect(0, canvas.height - groundHeight - 2, canvas.width, 2);
-
             break;
     }
 
@@ -2258,3 +2519,12 @@ function calculateSegmentedBestTime() {
 
 // Load saved data when the game starts
 loadGameData(); 
+
+// Add these new classes after the existing ones
+
+function checkCollision(a, b) {
+    return a.x < b.x + b.width &&
+           a.x + a.width > b.x &&
+           a.y < b.y + (b.height || 32) &&  // Use height if defined, otherwise default to 32
+           a.y + a.height > b.y;
+}
