@@ -1381,6 +1381,67 @@ const levels = [
             { x: 950, y: 50 }  // Ultimate challenge token
         ],
         goal: { x: 1050, y: 100 }
+    },
+
+    // Level 13 - Laser Dance
+    {
+        platforms: [
+            { x: 0, y: 750, width: 1200 },    // Ground
+            { x: 100, y: 600, width: 100 },   // Start
+            { x: 1000, y: 100, width: 100 }   // End
+        ],
+        movingPlatforms: [
+            // Small safe platforms between laser patterns
+            { x: 300, y: 500, width: 60, xRange: 100, speed: 2 },
+            { x: 600, y: 350, width: 60, xRange: 100, speed: 2 },
+            { x: 900, y: 200, width: 60, xRange: 100, speed: 2 }
+        ],
+        verticalPlatforms: [
+            // Escape platforms
+            { x: 200, y: 300, width: 60, yRange: 200, speed: 2 },
+            { x: 800, y: 200, width: 60, yRange: 200, speed: 2 }
+        ],
+        disappearingPlatforms: [
+            // Emergency platforms
+            { x: 400, y: 400, width: 60 },
+            { x: 700, y: 250, width: 60 }
+        ],
+        spikes: [
+            // Minimal spikes to focus on laser challenge
+            { x: 300, y: 730 },
+            { x: 600, y: 730 },
+            { x: 900, y: 730 }
+        ],
+        lasers: [
+            // Complex laser pattern that creates a "dance" sequence
+            // Horizontal lasers
+            { x: 200, y: 550, width: 300, interval: 1200, initialDelay: 0 },
+            { x: 700, y: 550, width: 300, interval: 1200, initialDelay: 600 },
+            { x: 200, y: 400, width: 300, interval: 1200, initialDelay: 400 },
+            { x: 700, y: 400, width: 300, interval: 1200, initialDelay: 1000 },
+            { x: 200, y: 250, width: 300, interval: 1200, initialDelay: 800 },
+            { x: 700, y: 250, width: 300, interval: 1200, initialDelay: 200 },
+            // Vertical lasers
+            { x: 500, y: 200, width: 50, interval: 2000, initialDelay: 0, vertical: true },
+            { x: 300, y: 300, width: 50, interval: 2000, initialDelay: 1000, vertical: true },
+            { x: 700, y: 300, width: 50, interval: 2000, initialDelay: 500, vertical: true }
+        ],
+        windZones: [], // No wind to keep focus on laser timing
+        bouncePads: [
+            // Strategic escape routes
+            { x: 150, y: 500, strength: -15 },
+            { x: 450, y: 350, strength: -15 },
+            { x: 750, y: 200, strength: -15 }
+        ],
+        coins: [
+            { x: 350, y: 450 },
+            { x: 650, y: 300 },
+            { x: 950, y: 150 }
+        ],
+        challengeTokens: [
+            { x: 500, y: 50 }  // Requires perfect laser timing
+        ],
+        goal: { x: 1050, y: 50 }
     }
 ];
 
