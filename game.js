@@ -1605,8 +1605,9 @@ const levels = [
             { x: 500, y: 200, width: 80, yRange: 400, speed: 5 }
         ],
         portals: [
-            { x: 200, y: 400, exitX: 800, exitY: 200, width: 40, height: 80, color: '#FF00FF' },
-            { x: 400, y: 300, exitX: 600, exitY: 500, width: 40, height: 80, color: '#00FFFF' }
+            // Adjusted portal positions and exit points to avoid spikes
+            { x: 200, y: 400, exitX: 800, exitY: 150, width: 40, height: 80, color: '#FF00FF' },
+            { x: 400, y: 300, exitX: 600, exitY: 400, width: 40, height: 80, color: '#00FFFF' }
         ],
         gravityWells: [
             { x: 400, y: 400, radius: 200, force: 3 },
@@ -1635,14 +1636,6 @@ const levels = [
             { x: 200, y: 450, width: 300, interval: 1200 },
             { x: 600, y: 300, width: 300, interval: 1200, initialDelay: 600 },
             { x: 400, y: 150, width: 300, interval: 1200, initialDelay: 300 }
-        ],
-        bouncePads: [
-            { x: 150, y: 500, width: 200, strength: -45 },
-            { x: 750, y: 300, width: 200, strength: -45 }
-        ],
-        verticalBouncePads: [
-            { x: 300, y: 200, height: 200, strength: 35 },
-            { x: 900, y: 300, height: 200, strength: 35 }
         ],
         challengeTokens: [
             { x: 950, y: 50 }
