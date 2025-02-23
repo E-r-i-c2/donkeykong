@@ -554,44 +554,6 @@ class LaserBeam {
     }
 }
 
-class BouncePad {
-    constructor(x, y, strength = -25) {
-        this.x = x;
-        this.y = y;
-        this.width = 40;
-        this.height = 10;
-        this.strength = strength;
-        this.activated = false;
-        this.activationTimer = 0;
-    }
-
-    update() {
-        if (this.activated) {
-            this.activationTimer += 16;
-            if (this.activationTimer >= 200) {
-                this.activated = false;
-                this.activationTimer = 0;
-            }
-        }
-    }
-
-    draw() {
-        ctx.fillStyle = this.activated ? '#00FF00' : '#00AA00';
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y + this.height);
-        ctx.lineTo(this.x + this.width/2, this.y);
-        ctx.lineTo(this.x + this.width, this.y + this.height);
-        ctx.fill();
-    }
-
-    bounce(player) {
-        player.velocityY = this.strength;
-        player.isJumping = true;
-        player.hasDoubleJump = true;
-        this.activated = true;
-    }
-}
-
 // Update WindZone class to fix arrow movement
 class WindZone {
     constructor(x, y, width, height, force = 3) {
@@ -723,32 +685,6 @@ class GravityWell {
             player.velocityX += (dx/distance) * force * 0.1;
             player.velocityY += (dy/distance) * force * 0.1;
         }
-    }
-}
-
-class VerticalBouncePad {
-    constructor(x, y, height, strength) {
-        this.x = x;
-        this.y = y;
-        this.width = 40;
-        this.height = height;
-        this.strength = strength;
-        this.activated = false;
-    }
-
-    draw() {
-        ctx.fillStyle = this.activated ? '#00FF00' : '#00AA00';
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width, this.y);
-        ctx.lineTo(this.x, this.y + this.height/2);
-        ctx.lineTo(this.x + this.width, this.y + this.height);
-        ctx.fill();
-    }
-
-    bounce(player) {
-        player.velocityX = this.strength;
-        this.activated = true;
-        setTimeout(() => this.activated = false, 200);
     }
 }
 
@@ -1796,13 +1732,11 @@ function loadLevel(levelIndex) {
         coins = [];
         lasers = [];
         windZones = [];
-        bouncePads = [];
         challengeTokens = [];
-        portals = [];          // Reset new mechanics
+        portals = [];
         gravityWells = [];
-        verticalBouncePads = [];
 
-        // Load all level elements
+        // Load level elements (remove bounce pad loading)
         platforms = level.platforms?.map(p => new Platform(p.x, p.y, p.width)) || [];
         movingPlatforms = level.movingPlatforms?.map(p => 
             new MovingPlatform(p.x, p.y, p.width, p.xRange, p.speed)
@@ -1821,22 +1755,14 @@ function loadLevel(levelIndex) {
         windZones = level.windZones?.map(w => 
             new WindZone(w.x, w.y, w.width, w.height, w.force)
         ) || [];
-        bouncePads = level.bouncePads?.map(b => 
-            new BouncePad(b.x, b.y, b.width || 40, b.strength)
-        ) || [];
         challengeTokens = level.challengeTokens?.map(t => 
             new ChallengeToken(t.x, t.y)
         ) || [];
-        
-        // Load new mechanics
         portals = level.portals?.map(p => 
             new Portal(p.x, p.y, p.exitX, p.exitY, p.width, p.height, p.color)
         ) || [];
         gravityWells = level.gravityWells?.map(g => 
             new GravityWell(g.x, g.y, g.radius, g.force)
-        ) || [];
-        verticalBouncePads = level.verticalBouncePads?.map(b => 
-            new VerticalBouncePad(b.x, b.y, b.height, b.strength)
         ) || [];
 
         if (level.goal) {
@@ -2396,10 +2322,7 @@ function gameLoop() {
             verticalPlatforms.forEach(platform => platform.update());
             disappearingPlatforms.forEach(platform => platform.update());
             lasers.forEach(laser => laser.update());
-            bouncePads.forEach(pad => pad.update());
             windZones.forEach(zone => zone.update(player));
-            
-            // Update new mechanics
             gravityWells.forEach(well => well.affect(player));
             
             player.update();
@@ -2411,11 +2334,8 @@ function gameLoop() {
             checkObstacleCollisions();
             checkGoalCollision();
             checkChallengeTokenCollisions();
-            
-            // Check new mechanic collisions
             checkPortalCollisions();
-            checkVerticalBouncePadCollisions();
-
+            
             // Draw everything
             platforms.forEach(platform => platform.draw());
             movingPlatforms.forEach(platform => platform.draw());
@@ -2425,13 +2345,9 @@ function gameLoop() {
             coins.forEach(coin => coin.draw());
             challengeTokens.forEach(token => token.draw());
             windZones.forEach(zone => zone.draw());
-            bouncePads.forEach(pad => pad.draw());
             lasers.forEach(laser => laser.draw());
-            
-            // Draw new mechanics
             gravityWells.forEach(well => well.draw());
             portals.forEach(portal => portal.draw());
-            verticalBouncePads.forEach(pad => pad.draw());
             
             goal.draw();
             player.draw();
